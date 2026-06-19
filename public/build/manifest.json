@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CmDRCXtr.css",
+    "file": "assets/app-Dv1ByAr_.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-CJrcL4lQ.js",
+    "file": "assets/Dashboard-D3tC6Fzu.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -17,7 +17,7 @@
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-B3ZYXXo_.js",
+    "file": "assets/Login-BA4Nf-FQ.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -26,7 +26,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-DNyAqOgA.js",
+    "file": "assets/Dashboard-BgE2nXDj.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -38,7 +38,7 @@
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-CIzSJSJw.js",
+    "file": "assets/Dashboard-ktg7RGRc.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -50,7 +50,7 @@
     ]
   },
   "resources/js/Pages/Quran.vue": {
-    "file": "assets/Quran-DKYjZGtw.js",
+    "file": "assets/Quran-3qu6EoK-.js",
     "name": "Quran",
     "src": "resources/js/Pages/Quran.vue",
     "isDynamicEntry": true,
@@ -62,7 +62,7 @@
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-C5qRtDgi.js",
+    "file": "assets/Dashboard-BevdBWFV.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -74,7 +74,7 @@
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-DQS8VBRa.js",
+    "file": "assets/Dashboard-D08LkDhC.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -86,7 +86,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DOz5N-69.js",
+    "file": "assets/app-BOeB1aLE.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -100,7 +100,7 @@
       "resources/js/Pages/Ustad/Dashboard.vue"
     ],
     "css": [
-      "assets/app-C-f6inYb.css"
+      "assets/app-D-8WdTGo.css"
     ]
   }
 }

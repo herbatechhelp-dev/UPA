@@ -20,6 +20,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'phone',
+        'gender',
+        'department',
+        'status',
     ];
 
     protected $hidden = [
@@ -124,5 +128,29 @@ class User extends Authenticatable
     public function isMember(): bool
     {
         return $this->hasRole('member');
+    }
+
+    /**
+     * Check if user account is approved by admin.
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    /**
+     * Check if user account is pending approval.
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if user account is rejected.
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
     }
 }

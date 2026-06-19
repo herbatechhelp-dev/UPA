@@ -26,6 +26,8 @@ const showAttendanceModal = ref(false); // for bulk input on Sesi Kajian tab
 
 const isEditingActivity = ref(false);
 const editingActivityId = ref(null);
+const isEditingMaterial = ref(false);
+const editingMaterialId = ref(null);
 
 const showSuccessNotification = ref(false);
 const notificationMessage = ref('');
@@ -180,17 +182,38 @@ const submitDelegation = () => {
 
 // Actions: Materials
 const openUploadMaterial = () => {
+  isEditingMaterial.value = false;
+  editingMaterialId.value = null;
   materialForm.reset();
   showMaterialModal.value = true;
 };
 
+const openEditMaterial = (mat) => {
+  isEditingMaterial.value = true;
+  editingMaterialId.value = mat.id;
+  materialForm.title = mat.title;
+  materialForm.content = mat.content || '';
+  materialForm.file = null;
+  showMaterialModal.value = true;
+};
+
 const submitMaterial = () => {
-  materialForm.post('/materials', {
-    onSuccess: () => {
-      showMaterialModal.value = false;
-      triggerNotification('Materi kajian berhasil diunggah dan dibagikan.');
-    }
-  });
+  if (isEditingMaterial.value) {
+    materialForm.post(`/materials/${editingMaterialId.value}`, {
+      forceFormData: true,
+      onSuccess: () => {
+        showMaterialModal.value = false;
+        triggerNotification('Materi kajian berhasil diperbarui!');
+      }
+    });
+  } else {
+    materialForm.post('/materials', {
+      onSuccess: () => {
+        showMaterialModal.value = false;
+        triggerNotification('Materi kajian berhasil diunggah dan dibagikan.');
+      }
+    });
+  }
 };
 
 const deleteMaterial = (materialId) => {
@@ -704,13 +727,22 @@ const handleLogout = () => {
                 </a>
                 <span v-else class="text-[10px] text-gray-400">Teks Saja</span>
 
-                <button 
-                  v-if="mat.can_delete"
-                  @click="deleteMaterial(mat.id)" 
-                  class="text-[10px] text-red-600 hover:text-red-950 font-bold border border-red-200 bg-red-50 py-1 px-2.5 rounded"
-                >
-                  Hapus
-                </button>
+                <div class="flex gap-1">
+                  <button 
+                    v-if="mat.can_edit"
+                    @click="openEditMaterial(mat)" 
+                    class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold border border-emerald-200 bg-emerald-50 py-1 px-2.5 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    v-if="mat.can_delete"
+                    @click="deleteMaterial(mat.id)" 
+                    class="text-[10px] text-red-600 hover:text-red-950 font-bold border border-red-200 bg-red-50 py-1 px-2.5 rounded"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -745,14 +777,23 @@ const handleLogout = () => {
                     <span v-else class="text-gray-400">Teks Saja</span>
                   </td>
                   <td class="py-3 px-6 text-center">
-                    <button 
-                      v-if="mat.can_delete"
-                      @click="deleteMaterial(mat.id)" 
-                      class="text-[10px] text-red-650 hover:text-red-900 font-bold"
-                    >
-                      Hapus
-                    </button>
-                    <span v-else class="text-gray-400">—</span>
+                    <div class="flex items-center justify-center gap-2">
+                      <button 
+                        v-if="mat.can_edit"
+                        @click="openEditMaterial(mat)" 
+                        class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        v-if="mat.can_delete"
+                        @click="deleteMaterial(mat.id)" 
+                        class="text-[10px] text-red-650 hover:text-red-900 font-bold"
+                      >
+                        Hapus
+                      </button>
+                      <span v-if="!mat.can_edit && !mat.can_delete" class="text-gray-400">—</span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -1067,7 +1108,7 @@ const handleLogout = () => {
       <div class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm" @click="showMaterialModal = false"></div>
       <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-50 animate-slide-up">
         <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h3 class="text-base font-bold">Unggah Materi Kajian Baru</h3>
+          <h3 class="text-base font-bold">{{ isEditingMaterial ? 'Edit Materi Kajian' : 'Unggah Materi Kajian Baru' }}</h3>
           <button @click="showMaterialModal = false" class="text-emerald-200 hover:text-white transition-colors p-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1075,6 +1116,7 @@ const handleLogout = () => {
           </button>
         </div>
         <form @submit.prevent="submitMaterial" class="p-5 space-y-4">
+          <input v-if="isEditingMaterial" type="hidden" name="_method" value="PUT" />
           <div class="space-y-1">
             <label for="mat_title" class="text-xs font-bold text-gray-500 uppercase block">Judul Materi</label>
             <input type="text" id="mat_title" v-model="materialForm.title" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 outline-none" />
@@ -1086,10 +1128,11 @@ const handleLogout = () => {
           <div class="space-y-1">
             <label for="mat_file" class="text-xs font-bold text-gray-500 uppercase block">Dokumen Lampiran (PDF, Word, PPT)</label>
             <input type="file" id="mat_file" @input="materialForm.file = $event.target.files[0]" class="w-full border border-gray-200 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none" />
+            <p v-if="isEditingMaterial" class="text-[10px] text-gray-400 mt-1">Kosongkan jika tidak ingin mengganti file.</p>
           </div>
           <div class="pt-4 border-t border-gray-100 flex gap-3">
             <button type="button" @click="showMaterialModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
-            <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Unggah</button>
+            <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">{{ isEditingMaterial ? 'Simpan Perubahan' : 'Unggah' }}</button>
           </div>
         </form>
       </div>

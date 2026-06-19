@@ -61,6 +61,48 @@ class MaterialController extends Controller
     }
 
     /**
+     * Update a material (Ustad owner only).
+     */
+    public function update(Request $request, Material $material): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($material->ustad_id !== $user->id && !$user->isSuperadmin()) {
+            abort(403, 'Anda tidak berhak mengedit materi ini.');
+        }
+
+        $validated = $request->validate([
+            'title'   => ['required', 'string', 'max:255'],
+            'content' => ['nullable', 'string'],
+            'file'    => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip', 'max:25600'],
+        ]);
+
+        $updateData = [
+            'title'   => $validated['title'],
+            'content' => $validated['content'] ?? null,
+        ];
+
+        if ($request->hasFile('file')) {
+            try {
+                if ($material->file_path) {
+                    Storage::disk('public')->delete($material->file_path);
+                }
+                if (!Storage::disk('public')->exists('materials')) {
+                    Storage::disk('public')->makeDirectory('materials');
+                }
+                $updateData['file_path'] = $request->file('file')->store('materials', 'public');
+            } catch (\Exception $e) {
+                Log::error('Material update upload failed: ' . $e->getMessage());
+                return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();
+            }
+        }
+
+        $material->update($updateData);
+
+        return redirect()->back()->with('success', 'Materi kajian berhasil diperbarui.');
+    }
+
+    /**
      * Display the specified material / trigger download.
      */
     public function download(Material $material)

@@ -72,7 +72,14 @@ const submit = () => {
         <!-- Form Body -->
         <form @submit.prevent="submit" class="p-6 space-y-5">
           
-          <!-- Error Alert -->
+          <!-- Success Flash (from registration) -->
+          <div v-if="$page.props.flash?.success" class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs p-3 rounded-lg flex items-start gap-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="leading-relaxed">{{ $page.props.flash.success }}</span>
+          </div>
+
           <!-- Error Alert -->
           <div v-if="form.errors.email" class="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-start gap-2.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
@@ -183,6 +190,10 @@ const submit = () => {
 
       <!-- Footer -->
       <div class="text-center mt-6">
+        <p class="text-sm text-gray-500 mb-3">
+          Belum punya akun?
+          <a href="/register" class="text-emerald-700 hover:text-emerald-800 font-bold">Daftar di sini</a>
+        </p>
         <p class="text-xs text-gray-400">
           &copy; 2026 Unit Pembinaan Anggota. Semua hak dilindungi.
         </p>

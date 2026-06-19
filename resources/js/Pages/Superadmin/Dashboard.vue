@@ -17,10 +17,11 @@ const props = defineProps({
   attendances: Array,
   systemStats: Object,
   settings: Object,
+  pendingUsers: Array,
 });
 
 // Navigation States
-const activeTab = ref('dashboard'); // 'dashboard' | 'users' | 'groups' | 'materials' | 'activities' | 'grades' | 'attendances'
+const activeTab = ref('dashboard'); // 'dashboard' | 'users' | 'groups' | 'materials' | 'activities' | 'grades' | 'attendances' | 'pending'
 
 // Notification States
 const showSuccessNotification = ref(false);
@@ -63,6 +64,8 @@ const plottingForm = useForm({
 
 // Material Modals
 const showMaterialModal = ref(false);
+const isEditingMaterial = ref(false);
+const editingMaterialId = ref(null);
 const materialForm = useForm({
   title: '',
   content: '',
@@ -116,6 +119,13 @@ const showAttendanceModal = ref(false);
 const selectedActivity = ref(null);
 const attendanceForm = useForm({
   attendances: []
+});
+
+// Registration Approval
+const showApproveModal = ref(false);
+const approvingUser = ref(null);
+const approveForm = useForm({
+  role_id: ''
 });
 
 // Search and Filter States
@@ -304,17 +314,39 @@ const detachMember = (groupId, userId) => {
 
 // Material CRUD
 const openAddMaterial = () => {
+  isEditingMaterial.value = false;
+  editingMaterialId.value = null;
   materialForm.reset();
   showMaterialModal.value = true;
 };
 
+const openEditMaterial = (mat) => {
+  isEditingMaterial.value = true;
+  editingMaterialId.value = mat.id;
+  materialForm.title = mat.title;
+  materialForm.content = mat.content || '';
+  materialForm.ustad_id = mat.ustad_id;
+  materialForm.file = null;
+  showMaterialModal.value = true;
+};
+
 const submitMaterialForm = () => {
-  materialForm.post('/superadmin/materials', {
-    onSuccess: () => {
-      showMaterialModal.value = false;
-      triggerNotification('Materi kajian berhasil diunggah!');
-    }
-  });
+  if (isEditingMaterial.value) {
+    materialForm.post(`/superadmin/materials/${editingMaterialId.value}`, {
+      forceFormData: true,
+      onSuccess: () => {
+        showMaterialModal.value = false;
+        triggerNotification('Materi kajian berhasil diperbarui!');
+      }
+    });
+  } else {
+    materialForm.post('/superadmin/materials', {
+      onSuccess: () => {
+        showMaterialModal.value = false;
+        triggerNotification('Materi kajian berhasil diunggah!');
+      }
+    });
+  }
 };
 
 const deleteMaterial = (materialId) => {
@@ -450,6 +482,30 @@ const deleteAttendance = (attendanceId) => {
 const handleLogout = () => {
   router.post('/logout');
 };
+
+// Registration Approval Actions
+const openApproveModal = (user) => {
+  approvingUser.value = user;
+  approveForm.role_id = '';
+  showApproveModal.value = true;
+};
+
+const submitApprove = () => {
+  approveForm.post(`/superadmin/users/${approvingUser.value.id}/approve`, {
+    onSuccess: () => {
+      showApproveModal.value = false;
+      triggerNotification(`${approvingUser.value.name} berhasil disetujui!`);
+    }
+  });
+};
+
+const rejectUser = (user) => {
+  if (confirm(`Apakah Anda yakin ingin menolak pendaftaran ${user.name}?`)) {
+    router.post(`/superadmin/users/${user.id}/reject`, {}, {
+      onSuccess: () => triggerNotification(`Pendaftaran ${user.name} telah ditolak.`)
+    });
+  }
+};
 </script>
 
 <template>
@@ -550,7 +606,8 @@ const handleLogout = () => {
             { key: 'materials', label: 'Materi CRUD' },
             { key: 'activities', label: 'Kajian CRUD' },
             { key: 'attendances', label: 'Absensi CRUD' },
-            { key: 'grades', label: 'Penilaian CRUD' }
+            { key: 'grades', label: 'Penilaian CRUD' },
+            { key: 'pending', label: `Pendaftaran Pending (${(pendingUsers || []).length})` }
           ]" 
           :key="tab.key"
           @click="activeTab = tab.key"
@@ -939,12 +996,20 @@ const handleLogout = () => {
                 </a>
                 <span v-else class="text-[10px] text-gray-400 font-semibold">Teks Saja</span>
 
-                <button 
-                  @click="deleteMaterial(mat.id)" 
-                  class="text-[10px] text-red-600 hover:text-red-900 font-bold border border-red-200 bg-red-50 py-1 px-2.5 rounded"
-                >
-                  Hapus
-                </button>
+                <div class="flex gap-1">
+                  <button 
+                    @click="openEditMaterial(mat)" 
+                    class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold border border-emerald-200 bg-emerald-50 py-1 px-2.5 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    @click="deleteMaterial(mat.id)" 
+                    class="text-[10px] text-red-600 hover:text-red-900 font-bold border border-red-200 bg-red-50 py-1 px-2.5 rounded"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -979,7 +1044,10 @@ const handleLogout = () => {
                     <span v-else class="text-gray-400">Teks Saja</span>
                   </td>
                   <td class="py-3 px-6 text-center">
-                    <button @click="deleteMaterial(mat.id)" class="text-[10px] text-red-600 hover:text-red-900 font-bold">Hapus</button>
+                    <div class="flex items-center justify-center gap-2">
+                      <button @click="openEditMaterial(mat)" class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold">Edit</button>
+                      <button @click="deleteMaterial(mat.id)" class="text-[10px] text-red-600 hover:text-red-900 font-bold">Hapus</button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -1226,6 +1294,88 @@ const handleLogout = () => {
           </div>
         </div>
 
+        <!-- 8. PENDING REGISTRATIONS -->
+        <div v-if="activeTab === 'pending'" class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-lg font-bold text-emerald-950">Pendaftaran Pending</h2>
+              <p class="text-xs text-gray-500 font-medium">Daftar pengguna yang mendaftar sendiri dan menunggu persetujuan admin.</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              {{ (pendingUsers || []).length }} menunggu
+            </span>
+          </div>
+
+          <div v-if="!pendingUsers || pendingUsers.length === 0" class="text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-sm text-gray-500 font-medium">Tidak ada pendaftaran pending.</p>
+          </div>
+
+          <!-- Mobile view: cards -->
+          <div v-else class="block sm:hidden space-y-3">
+            <div v-for="pu in pendingUsers" :key="pu.id" class="p-4 rounded-xl border border-amber-100 bg-amber-50/50 space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="font-bold text-gray-900 text-sm block">{{ pu.name }}</span>
+                  <span class="text-[10px] text-gray-500 block mt-0.5">{{ pu.email }}</span>
+                </div>
+                <span class="text-[9px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">PENDING</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div><span class="text-gray-400">WhatsApp:</span> <strong class="text-gray-700">{{ pu.phone }}</strong></div>
+                <div><span class="text-gray-400">Gender:</span> <strong class="text-gray-700">{{ pu.gender === 'ikhwan' ? 'Ikhwan' : 'Akhwat' }}</strong></div>
+                <div class="col-span-2"><span class="text-gray-400">Departemen:</span> <strong class="text-gray-700">{{ pu.department }}</strong></div>
+                <div class="col-span-2"><span class="text-gray-400">Daftar:</span> <strong class="text-gray-700">{{ pu.created_at }}</strong></div>
+              </div>
+              <div class="pt-2 border-t border-dashed border-amber-200 flex gap-2">
+                <button @click="openApproveModal(pu)" class="flex-1 text-[10px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-1.5 px-3 rounded-lg">Approve</button>
+                <button @click="rejectUser(pu)" class="flex-1 text-[10px] font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 py-1.5 px-3 rounded-lg">Reject</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop view: table -->
+          <div v-if="pendingUsers && pendingUsers.length > 0" class="hidden sm:block overflow-x-auto rounded-lg border border-amber-100">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-amber-50 font-bold text-gray-500 uppercase tracking-wider border-b border-amber-100">
+                  <th class="py-3 px-6">Nama</th>
+                  <th class="py-3 px-6">Email</th>
+                  <th class="py-3 px-6">WhatsApp</th>
+                  <th class="py-3 px-6">Gender</th>
+                  <th class="py-3 px-6">Departemen</th>
+                  <th class="py-3 px-6">Tanggal Daftar</th>
+                  <th class="py-3 px-6 text-center">Status</th>
+                  <th class="py-3 px-6 text-center font-bold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="pu in pendingUsers" :key="pu.id" class="hover:bg-amber-50/40">
+                  <td class="py-3 px-6 font-bold text-gray-900">{{ pu.name }}</td>
+                  <td class="py-3 px-6 text-gray-600">{{ pu.email }}</td>
+                  <td class="py-3 px-6 text-gray-600">{{ pu.phone }}</td>
+                  <td class="py-3 px-6 text-gray-600">{{ pu.gender === 'ikhwan' ? 'Ikhwan' : 'Akhwat' }}</td>
+                  <td class="py-3 px-6 text-gray-600">{{ pu.department }}</td>
+                  <td class="py-3 px-6 text-gray-500">{{ pu.created_at }}</td>
+                  <td class="py-3 px-6 text-center">
+                    <span class="text-[9px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">PENDING</span>
+                  </td>
+                  <td class="py-3 px-6 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                      <button @click="openApproveModal(pu)" class="text-[10px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-1 px-3 rounded">Approve</button>
+                      <button @click="rejectUser(pu)" class="text-[10px] font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 py-1 px-3 rounded">Reject</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </main>
 
@@ -1373,7 +1523,7 @@ const handleLogout = () => {
 
       <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-50 animate-slide-up">
         <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h3 class="text-base sm:text-lg font-bold">Unggah Materi Kajian Baru</h3>
+          <h3 class="text-base sm:text-lg font-bold">{{ isEditingMaterial ? 'Edit Materi Kajian' : 'Unggah Materi Kajian Baru' }}</h3>
           <button @click="showMaterialModal = false" class="text-emerald-200 hover:text-white transition-colors p-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1382,6 +1532,7 @@ const handleLogout = () => {
         </div>
 
         <form @submit.prevent="submitMaterialForm" class="p-6 space-y-4">
+          <input v-if="isEditingMaterial" type="hidden" name="_method" value="PUT" />
           <div class="space-y-1">
             <label for="mat_title" class="text-xs font-bold text-gray-500 uppercase block">Judul Materi</label>
             <input type="text" id="mat_title" v-model="materialForm.title" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 outline-none" />
@@ -1408,11 +1559,12 @@ const handleLogout = () => {
               @input="materialForm.file = $event.target.files[0]" 
               class="w-full border border-gray-250 p-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none" 
             />
+            <p v-if="isEditingMaterial" class="text-[10px] text-gray-400 mt-1">Kosongkan jika tidak ingin mengganti file.</p>
           </div>
 
           <div class="pt-4 border-t border-gray-100 flex gap-3">
             <button type="button" @click="showMaterialModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
-            <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Unggah</button>
+            <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">{{ isEditingMaterial ? 'Simpan Perubahan' : 'Unggah' }}</button>
           </div>
         </form>
       </div>
@@ -1588,6 +1740,48 @@ const handleLogout = () => {
           <div class="pt-4 border-t border-gray-100 flex gap-3">
             <button type="button" @click="showAttendanceModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
             <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Simpan Kehadiran</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: APPROVE USER REGISTRATION -->
+    <div v-if="showApproveModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm transition-opacity" @click="showApproveModal = false"></div>
+
+      <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-50 animate-slide-up">
+        <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
+          <h3 class="text-base sm:text-lg font-bold">Approve Pendaftaran</h3>
+          <button @click="showApproveModal = false" class="text-emerald-200 hover:text-white transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="submitApprove" class="p-6 space-y-4">
+          <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
+            <p class="text-xs text-gray-500 font-medium mb-2">Data Pendaftar:</p>
+            <p class="text-sm font-bold text-gray-900">{{ approvingUser?.name }}</p>
+            <p class="text-xs text-gray-600">{{ approvingUser?.email }}</p>
+            <div class="grid grid-cols-2 gap-2 mt-2 text-xs">
+              <div><span class="text-gray-400">WhatsApp:</span> <strong>{{ approvingUser?.phone }}</strong></div>
+              <div><span class="text-gray-400">Gender:</span> <strong>{{ approvingUser?.gender === 'ikhwan' ? 'Ikhwan' : 'Akhwat' }}</strong></div>
+              <div class="col-span-2"><span class="text-gray-400">Departemen:</span> <strong>{{ approvingUser?.department }}</strong></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label for="approve_role" class="text-xs font-bold text-gray-500 uppercase block">Tentukan Role (Hak Akses)</label>
+            <select id="approve_role" v-model="approveForm.role_id" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 outline-none">
+              <option value="" disabled selected>Pilih role untuk user ini...</option>
+              <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }} — {{ role.desc }}</option>
+            </select>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 flex gap-3">
+            <button type="button" @click="showApproveModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
+            <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Approve</button>
           </div>
         </form>
       </div>

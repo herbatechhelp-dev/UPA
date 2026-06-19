@@ -55,6 +55,7 @@ class AdminGroupController extends Controller
                 'id'           => $m->id,
                 'title'        => $m->title,
                 'content'      => $m->content,
+                'ustad_id'     => $m->ustad_id,
                 'ustad_name'   => $m->ustad?->name ?? 'System',
                 'file_path'    => $m->file_path,
                 'published_at' => $m->published_at ? $m->published_at->format('d M Y H:i') : '—',
@@ -99,6 +100,25 @@ class AdminGroupController extends Controller
                 'approved_at'   => $at->approved_at ? $at->approved_at->format('d M Y H:i') : '—',
             ]);
 
+        $pendingUsers = User::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn (User $u) => [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'email'      => $u->email,
+                'phone'      => $u->phone ?? '—',
+                'gender'     => $u->gender ?? '—',
+                'department' => $u->department ?? '—',
+                'created_at' => $u->created_at ? $u->created_at->format('d M Y H:i') : '—',
+            ]);
+
+        $roles = Role::all()->map(fn (Role $r) => [
+            'id'   => $r->id,
+            'name' => $r->name,
+            'slug' => $r->slug,
+        ]);
+
         return Inertia::render('Admin/Dashboard', [
             'auth'             => auth()->user()->load('role'),
             'groups'           => $groups,
@@ -109,6 +129,8 @@ class AdminGroupController extends Controller
             'activities'       => $activities,
             'grades'           => $grades,
             'attendances'      => $attendances,
+            'pendingUsers'     => $pendingUsers,
+            'roles'            => $roles,
         ]);
     }
 
@@ -307,6 +329,44 @@ class AdminGroupController extends Controller
     }
 
     /**
+     * Update the specified Material.
+     */
+    public function updateMaterial(Request $request, \App\Models\Material $material): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'    => ['required', 'string', 'max:255'],
+            'content'  => ['nullable', 'string'],
+            'ustad_id' => ['required', 'exists:users,id'],
+            'file'     => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip', 'max:25600'],
+        ]);
+
+        $updateData = [
+            'title'    => $validated['title'],
+            'content'  => $validated['content'] ?? null,
+            'ustad_id' => $validated['ustad_id'],
+        ];
+
+        if ($request->hasFile('file')) {
+            try {
+                if ($material->file_path) {
+                    Storage::disk('public')->delete($material->file_path);
+                }
+                if (!Storage::disk('public')->exists('materials')) {
+                    Storage::disk('public')->makeDirectory('materials');
+                }
+                $updateData['file_path'] = $request->file('file')->store('materials', 'public');
+            } catch (\Exception $e) {
+                Log::error('Material update upload failed: ' . $e->getMessage());
+                return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();
+            }
+        }
+
+        $material->update($updateData);
+
+        return redirect()->back()->with('success', 'Materi kajian berhasil diperbarui.');
+    }
+
+    /**
      * Remove the specified Material.
      */
     public function destroyMaterial(\App\Models\Material $material): RedirectResponse
@@ -439,5 +499,32 @@ class AdminGroupController extends Controller
         $attendance->delete();
 
         return redirect()->back()->with('success', 'Catatan absensi berhasil dihapus.');
+    }
+
+    /**
+     * Approve a pending user and assign role.
+     */
+    public function approveUser(User $user, Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'role_id' => ['required', 'exists:roles,id'],
+        ]);
+
+        $user->update([
+            'status'  => 'approved',
+            'role_id' => $validated['role_id'],
+        ]);
+
+        return redirect()->back()->with('success', "User {$user->name} berhasil disetujui.");
+    }
+
+    /**
+     * Reject a pending user registration.
+     */
+    public function rejectUser(User $user): RedirectResponse
+    {
+        $user->update(['status' => 'rejected']);
+
+        return redirect()->back()->with('success', "Pendaftaran {$user->name} telah ditolak.");
     }
 }

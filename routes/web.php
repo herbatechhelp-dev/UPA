@@ -10,6 +10,7 @@ use App\Http\Controllers\LeaderDashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MemberDashboardController;
 use App\Http\Controllers\QuranController;
+use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SuperadminDashboardController;
 use App\Http\Controllers\UstadDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
 
 // ─────────────────────────────────────────────────────────
 // Authenticated Routes
@@ -53,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Material CRUD
         Route::post('/superadmin/materials', [SuperadminDashboardController::class, 'storeMaterial'])->name('superadmin.materials.store');
+        Route::put('/superadmin/materials/{material}', [SuperadminDashboardController::class, 'updateMaterial'])->name('superadmin.materials.update');
         Route::delete('/superadmin/materials/{material}', [SuperadminDashboardController::class, 'destroyMaterial'])->name('superadmin.materials.destroy');
 
         // Activity CRUD
@@ -67,6 +72,11 @@ Route::middleware(['auth'])->group(function () {
         // Attendance CRUD
         Route::post('/superadmin/activities/{activity}/attendances/approve', [SuperadminDashboardController::class, 'approveAttendance'])->name('superadmin.attendances.approve');
         Route::delete('/superadmin/attendances/{attendance}', [SuperadminDashboardController::class, 'destroyAttendance'])->name('superadmin.attendances.destroy');
+
+        // Registration Approval
+        Route::get('/superadmin/pending-users', [SuperadminDashboardController::class, 'pendingUsers'])->name('superadmin.pending-users');
+        Route::post('/superadmin/users/{user}/approve', [SuperadminDashboardController::class, 'approveUser'])->name('superadmin.users.approve');
+        Route::post('/superadmin/users/{user}/reject', [SuperadminDashboardController::class, 'rejectUser'])->name('superadmin.users.reject');
     });
 
     // ─── 2. Admin Area ───────────────────────────────────
@@ -94,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Material CRUD
         Route::post('/admin/materials', [AdminGroupController::class, 'storeMaterial'])->name('admin.materials.store');
+        Route::put('/admin/materials/{material}', [AdminGroupController::class, 'updateMaterial'])->name('admin.materials.update');
         Route::delete('/admin/materials/{material}', [AdminGroupController::class, 'destroyMaterial'])->name('admin.materials.destroy');
 
         // Activity CRUD
@@ -108,6 +119,10 @@ Route::middleware(['auth'])->group(function () {
         // Attendance CRUD
         Route::post('/admin/activities/{activity}/attendances/approve', [AdminGroupController::class, 'approveAttendance'])->name('admin.attendances.approve');
         Route::delete('/admin/attendances/{attendance}', [AdminGroupController::class, 'destroyAttendance'])->name('admin.attendances.destroy');
+
+        // Registration Approval
+        Route::post('/admin/users/{user}/approve', [AdminGroupController::class, 'approveUser'])->name('admin.users.approve');
+        Route::post('/admin/users/{user}/reject', [AdminGroupController::class, 'rejectUser'])->name('admin.users.reject');
     });
 
     // ─── 3. Ustad (Pembina) Area ─────────────────────────
@@ -118,6 +133,8 @@ Route::middleware(['auth'])->group(function () {
         // Materials Management (Ustad only)
         Route::post('/materials', [MaterialController::class, 'store'])
             ->name('materials.store');
+        Route::put('/materials/{material}', [MaterialController::class, 'update'])
+            ->name('materials.update');
         Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])
             ->name('materials.destroy');
 

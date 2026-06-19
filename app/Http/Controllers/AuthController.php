@@ -41,6 +41,25 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->load('role');
 
+        // Block login for unapproved accounts
+        if ($user->isPending()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors([
+                'email' => 'Akun Anda belum disetujui oleh admin. Silakan tunggu konfirmasi.',
+            ])->onlyInput('email');
+        }
+
+        if ($user->isRejected()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors([
+                'email' => 'Pendaftaran akun Anda telah ditolak. Hubungi admin untuk informasi lebih lanjut.',
+            ])->onlyInput('email');
+        }
+
         // Redirect to the appropriate dashboard based on role
         return redirect($this->resolveDashboard($user));
     }

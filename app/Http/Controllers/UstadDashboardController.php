@@ -87,10 +87,12 @@ class UstadDashboardController extends Controller
                 'id'           => $m->id,
                 'title'        => $m->title,
                 'content'      => $m->content,
+                'ustad_id'     => $m->ustad_id,
                 'ustad_name'   => $m->ustad?->name ?? 'System',
                 'file_path'    => $m->file_path,
                 'published_at' => $m->published_at ? $m->published_at->format('d M Y H:i') : '—',
                 'can_delete'   => $m->ustad_id === $user->id,
+                'can_edit'     => $m->ustad_id === $user->id,
             ]);
 
         // 2. Fetch all activities for groups managed by this Ustad

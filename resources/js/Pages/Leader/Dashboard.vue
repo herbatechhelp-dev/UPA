@@ -124,6 +124,20 @@ const handleLogout = () => {
           <p class="text-emerald-100 mt-1 text-xs sm:text-sm max-w-lg hidden sm:block">
             Gunakan panel ini untuk melakukan absensi mandiri, meninjau materi kajian, serta memvalidasi kehadiran anggota kelompok apabila didelegasikan oleh Ustad Pembina.
           </p>
+          <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-emerald-200">
+            <span class="flex items-center gap-1 bg-emerald-900/50 px-2 py-0.5 rounded border border-emerald-700/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Kelompok: <strong class="text-white ml-0.5">{{ group.name }}</strong>
+            </span>
+            <span v-if="group.ustad?.name" class="flex items-center gap-1 bg-emerald-900/50 px-2 py-0.5 rounded border border-emerald-700/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Pembina: <strong class="text-white ml-0.5">{{ group.ustad.name }}</strong>
+            </span>
+          </div>
         </div>
         
         <!-- Personal Check-in Button -->

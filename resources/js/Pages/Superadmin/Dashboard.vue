@@ -740,7 +740,9 @@ const handleLogout = () => {
               </div>
               <div class="text-xs space-y-1">
                 <div>Email: <span class="text-gray-655 font-medium">{{ user.email }}</span></div>
-                <div>Halaqah: <span class="text-gray-500 font-semibold">{{ user.group_name || '—' }}</span></div>
+                <div>Halaqah: <span class="text-gray-800 font-semibold">{{ user.group_name || '—' }}</span></div>
+                <div v-if="user.ustad_name && user.ustad_name !== '—'">Pembina: <span class="text-emerald-700 font-semibold">{{ user.ustad_name }}</span></div>
+                <div v-if="user.leader_name && user.leader_name !== '—'">Ketua: <span class="text-amber-700 font-semibold">{{ user.leader_name }}</span></div>
               </div>
               <div class="pt-2 border-t border-dashed border-gray-200 flex justify-end items-center gap-2">
                 <button @click="openEditUser(user)" class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold border border-emerald-200 bg-emerald-50 py-1 px-2.5 rounded">Edit</button>
@@ -779,7 +781,15 @@ const handleLogout = () => {
                       {{ user.role_name }}
                     </span>
                   </td>
-                  <td class="py-3 px-6 text-gray-500 font-medium">{{ user.group_name }}</td>
+                  <td class="py-3 px-6 text-gray-500 font-medium">
+                    <div class="font-semibold text-gray-800">{{ user.group_name }}</div>
+                    <div v-if="user.ustad_name && user.ustad_name !== '—'" class="text-[10px] text-emerald-700 mt-0.5 font-medium">
+                      Pembina: {{ user.ustad_name }}
+                    </div>
+                    <div v-if="user.leader_name && user.leader_name !== '—'" class="text-[10px] text-amber-700 font-medium">
+                      Ketua: {{ user.leader_name }}
+                    </div>
+                  </td>
                   <td class="py-3 px-6 text-center space-x-2">
                     <button @click="openEditUser(user)" class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold">Edit</button>
                     <button @click="deleteUser(user.id)" class="text-[10px] text-red-600 hover:text-red-900 font-bold">Hapus</button>

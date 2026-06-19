@@ -34,7 +34,7 @@ class SuperadminDashboardController extends Controller
             'desc' => $this->getRoleDescription($r->slug),
         ]);
 
-        $users = User::with(['role', 'groups'])
+        $users = User::with(['role', 'groups.ustad', 'groups.leader', 'groupsManaged', 'groupsLed'])
             ->get()
             ->map(fn (User $u) => [
                 'id'         => $u->id,
@@ -44,6 +44,8 @@ class SuperadminDashboardController extends Controller
                 'role_name'  => $u->role?->name ?? '—',
                 'role_slug'  => $u->role?->slug ?? '—',
                 'group_name' => $u->groups->first()?->name ?? ($u->groupsManaged->first()?->name ? $u->groupsManaged->first()?->name . ' (Pembina)' : ($u->groupsLed->first()?->name ? $u->groupsLed->first()?->name . ' (Ketua)' : '—')),
+                'ustad_name' => $u->groups->first()?->ustad?->name ?? '—',
+                'leader_name'=> $u->groups->first()?->leader?->name ?? '—',
             ]);
 
         $groups = Group::with(['ustad', 'leader', 'members'])

@@ -135,6 +135,31 @@ const handleLogout = () => {
         
         <!-- Column 1: Materials List -->
         <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Halaqah Info Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+            <h2 class="text-base font-bold text-emerald-950 mb-4 pb-2 border-b border-emerald-50 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Informasi Halaqah
+            </h2>
+            <div class="space-y-4">
+              <div>
+                <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Nama Halaqah</span>
+                <span class="text-sm font-bold text-emerald-800">{{ auth.groups?.[0]?.name || 'Belum Terplot' }}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Ustad Pembina</span>
+                <span class="text-sm font-bold text-gray-900">{{ auth.groups?.[0]?.ustad?.name || '—' }}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Ketua Kelompok</span>
+                <span class="text-sm font-bold text-gray-900">{{ auth.groups?.[0]?.leader?.name || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
           <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
             <h2 class="text-base font-bold text-emerald-950 mb-4 pb-2 border-b border-emerald-50 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">

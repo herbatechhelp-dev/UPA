@@ -86,7 +86,7 @@ class MemberDashboardController extends Controller
             ]);
 
         return Inertia::render('Member/Dashboard', [
-            'auth' => $user->load('role'),
+            'auth' => $user->load(['role', 'groups.ustad', 'groups.leader']),
             'activeActivity' => $latestActivity ? [
                 'id'    => $latestActivity->id,
                 'topic' => $latestActivity->topic,

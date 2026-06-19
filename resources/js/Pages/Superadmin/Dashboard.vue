@@ -333,8 +333,14 @@ const openEditMaterial = (mat) => {
 
 const submitMaterialForm = () => {
   if (isEditingMaterial.value) {
-    materialForm._method = 'PUT';
-    materialForm.post(`/superadmin/materials/${editingMaterialId.value}`, {
+    const data = {
+      _method: 'PUT',
+      title: materialForm.title,
+      content: materialForm.content,
+      ustad_id: materialForm.ustad_id,
+      file: materialForm.file,
+    };
+    router.post(`/superadmin/materials/${editingMaterialId.value}`, data, {
       forceFormData: true,
       onSuccess: () => {
         showMaterialModal.value = false;

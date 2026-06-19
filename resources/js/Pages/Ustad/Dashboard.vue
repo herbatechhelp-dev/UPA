@@ -200,8 +200,13 @@ const openEditMaterial = (mat) => {
 
 const submitMaterial = () => {
   if (isEditingMaterial.value) {
-    materialForm._method = 'PUT';
-    materialForm.post(`/materials/${editingMaterialId.value}`, {
+    const data = {
+      _method: 'PUT',
+      title: materialForm.title,
+      content: materialForm.content,
+      file: materialForm.file,
+    };
+    router.post(`/materials/${editingMaterialId.value}`, data, {
       forceFormData: true,
       onSuccess: () => {
         showMaterialModal.value = false;

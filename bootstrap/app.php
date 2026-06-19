@@ -7,6 +7,11 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->registered(function ($app) {
+        if (file_exists(base_path('public_html'))) {
+            $app->usePublicPath(path: realpath(base_path('public_html')));
+        }
+    })
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
     )

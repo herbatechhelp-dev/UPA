@@ -4,12 +4,12 @@
     "name": "_plugin-vue_export-helper"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BEF35Jah.css",
+    "file": "assets/app-BRvO4knX.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-W5-BQ3PL.js",
+    "file": "assets/Dashboard-Dt3p3mMH.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -22,7 +22,7 @@
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-DugZM0_X.js",
+    "file": "assets/Login-CJIwnR1k.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -31,7 +31,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-BhMj18CX.js",
+    "file": "assets/Dashboard-BmYYjzut.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -44,7 +44,7 @@
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-CCAiw01l.js",
+    "file": "assets/Dashboard-CDjkEg5y.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -53,11 +53,11 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Dashboard-DfJos1Ud.css"
+      "assets/Dashboard-Ck_O4eCR.css"
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-ChGnCUvZ.js",
+    "file": "assets/Dashboard-C8Li6Dc-.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -70,7 +70,7 @@
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-Dcx-_ur0.js",
+    "file": "assets/Dashboard-CFS14Iy7.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -83,7 +83,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BreBpIaQ.js",
+    "file": "assets/app-ChmY8sae.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -96,7 +96,7 @@
       "resources/js/Pages/Ustad/Dashboard.vue"
     ],
     "css": [
-      "assets/app-BEF35Jah.css"
+      "assets/app-BRvO4knX.css"
     ]
   }
 }

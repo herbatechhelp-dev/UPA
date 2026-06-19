@@ -101,10 +101,10 @@ const handleLogout = () => {
         </div>
 
         <!-- Check-in Board -->
-        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-3 sm:p-4 rounded-xl flex items-center space-x-3 flex-shrink-0">
+        <div class="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 p-3 sm:p-4 rounded-xl flex items-center justify-between sm:justify-start space-x-3 flex-shrink-0">
           <div>
             <span class="text-[10px] sm:text-xs text-emerald-200 block font-semibold uppercase tracking-wider">Absen Mandiri Anggota</span>
-            <span class="text-xs text-amber-300 font-bold block max-w-[140px] truncate">{{ activeActivity?.topic || 'Belum ada kajian aktif' }}</span>
+            <span class="text-xs text-amber-300 font-bold block max-w-[180px] sm:max-w-[140px] truncate">{{ activeActivity?.topic || 'Belum ada kajian aktif' }}</span>
           </div>
           <div v-if="!checkedIn" class="flex items-center space-x-2">
             <select v-model="checkInForm.status" class="bg-emerald-950/70 border border-emerald-800 text-white text-xs rounded-lg p-1.5 focus:ring-1 focus:ring-amber-400 outline-none">

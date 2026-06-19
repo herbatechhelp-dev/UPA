@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -287,7 +288,15 @@ class SuperadminDashboardController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('materials', 'public');
+            try {
+                if (!Storage::disk('public')->exists('materials')) {
+                    Storage::disk('public')->makeDirectory('materials');
+                }
+                $filePath = $request->file('file')->store('materials', 'public');
+            } catch (\Exception $e) {
+                Log::error('Material upload failed: ' . $e->getMessage());
+                return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();
+            }
         }
 
         Material::create([

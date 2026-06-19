@@ -303,11 +303,15 @@ class SuperadminDashboardController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            if (!$file->isValid()) {
+                return redirect()->back()->withErrors(['file' => 'File tidak valid: ' . $file->getErrorMessage()])->withInput();
+            }
             try {
                 if (!Storage::disk('public')->exists('materials')) {
                     Storage::disk('public')->makeDirectory('materials');
                 }
-                $filePath = $request->file('file')->store('materials', 'public');
+                $filePath = $file->store('materials', 'public');
             } catch (\Exception $e) {
                 Log::error('Material upload failed: ' . $e->getMessage());
                 return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();
@@ -344,6 +348,10 @@ class SuperadminDashboardController extends Controller
         ];
 
         if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            if (!$file->isValid()) {
+                return redirect()->back()->withErrors(['file' => 'File tidak valid: ' . $file->getErrorMessage()])->withInput();
+            }
             try {
                 if ($material->file_path) {
                     Storage::disk('public')->delete($material->file_path);
@@ -351,7 +359,7 @@ class SuperadminDashboardController extends Controller
                 if (!Storage::disk('public')->exists('materials')) {
                     Storage::disk('public')->makeDirectory('materials');
                 }
-                $updateData['file_path'] = $request->file('file')->store('materials', 'public');
+                $updateData['file_path'] = $file->store('materials', 'public');
             } catch (\Exception $e) {
                 Log::error('Material update upload failed: ' . $e->getMessage());
                 return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();

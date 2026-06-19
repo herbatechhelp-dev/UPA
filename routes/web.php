@@ -9,6 +9,7 @@ use App\Http\Controllers\GradeController;
 use App\Http\Controllers\LeaderDashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MemberDashboardController;
+use App\Http\Controllers\QuranController;
 use App\Http\Controllers\SuperadminDashboardController;
 use App\Http\Controllers\UstadDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -183,4 +184,12 @@ Route::middleware(['auth'])->group(function () {
     // Material download — all authenticated users
     Route::get('/materials/{material}/download', [MaterialController::class, 'download'])
         ->name('materials.download');
+
+    // ─── Al-Quran (all authenticated users) ─────────────
+    Route::get('/quran', [QuranController::class, 'index'])->name('quran.index');
+    Route::get('/quran/surah/{number}', [QuranController::class, 'surah'])->name('quran.surah');
+    Route::get('/quran/tafsir/{number}', [QuranController::class, 'tafsir'])->name('quran.tafsir');
+    Route::post('/quran/bookmarks', [QuranController::class, 'bookmark'])->name('quran.bookmark');
+    Route::delete('/quran/bookmarks/{bookmark}', [QuranController::class, 'unbookmark'])->name('quran.unbookmark');
+    Route::get('/quran/bookmarks', [QuranController::class, 'bookmarks'])->name('quran.bookmarks');
 });

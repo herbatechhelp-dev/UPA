@@ -36,6 +36,10 @@ return [
     ],
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        // Dynamically link to public_html/storage on hosting, or public/storage locally
+        (file_exists(base_path('public_html'))
+            ? base_path('public_html/storage')
+            : public_path('storage')
+        ) => storage_path('app/public'),
     ],
 ];

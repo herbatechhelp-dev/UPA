@@ -5,6 +5,7 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 // Props passed from controller
 const props = defineProps({
   auth: Object,
+  mentoringGroup: Object,
   activeActivity: Object,
   attendances: Array,
   grades: Array,
@@ -147,15 +148,15 @@ const handleLogout = () => {
             <div class="space-y-4">
               <div>
                 <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Nama Halaqah</span>
-                <span class="text-sm font-bold text-emerald-800">{{ auth.groups?.[0]?.name || 'Belum Terplot' }}</span>
+                <span class="text-sm font-bold text-emerald-800">{{ mentoringGroup?.name || 'Belum Terplot' }}</span>
               </div>
               <div>
                 <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Ustad Pembina</span>
-                <span class="text-sm font-bold text-gray-900">{{ auth.groups?.[0]?.ustad?.name || '—' }}</span>
+                <span class="text-sm font-bold text-gray-900">{{ mentoringGroup?.ustad?.name || '—' }}</span>
               </div>
               <div>
                 <span class="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">Ketua Kelompok</span>
-                <span class="text-sm font-bold text-gray-900">{{ auth.groups?.[0]?.leader?.name || '—' }}</span>
+                <span class="text-sm font-bold text-gray-900">{{ mentoringGroup?.leader?.name || '—' }}</span>
               </div>
             </div>
           </div>

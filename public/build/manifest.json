@@ -9,7 +9,7 @@
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-Dk2P16XM.js",
+    "file": "assets/Dashboard-W5-BQ3PL.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -22,7 +22,7 @@
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-PxrX4R6N.js",
+    "file": "assets/Login-DugZM0_X.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -31,7 +31,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-Q1BPFlMr.js",
+    "file": "assets/Dashboard-BhMj18CX.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -44,7 +44,7 @@
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-B6DNlP5N.js",
+    "file": "assets/Dashboard-CCAiw01l.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -53,11 +53,11 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Dashboard-C42v5RhM.css"
+      "assets/Dashboard-DfJos1Ud.css"
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-DfbXsfWW.js",
+    "file": "assets/Dashboard-ChGnCUvZ.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -70,7 +70,7 @@
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-CWUMOKkk.js",
+    "file": "assets/Dashboard-Dcx-_ur0.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -83,7 +83,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D3Dcm5_P.js",
+    "file": "assets/app-BreBpIaQ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

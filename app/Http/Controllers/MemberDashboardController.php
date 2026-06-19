@@ -85,8 +85,19 @@ class MemberDashboardController extends Controller
                 'size'      => '—',
             ]);
 
+        $group = $user->groups()->with(['ustad', 'leader'])->first();
+        $mentoringGroup = null;
+        if ($group) {
+            $mentoringGroup = [
+                'name' => $group->name,
+                'ustad' => $group->ustad ? ['name' => $group->ustad->name] : null,
+                'leader' => $group->leader ? ['name' => $group->leader->name] : null,
+            ];
+        }
+
         return Inertia::render('Member/Dashboard', [
-            'auth' => $user->load(['role', 'groups.ustad', 'groups.leader']),
+            'auth' => $user->load('role'),
+            'mentoringGroup' => $mentoringGroup,
             'activeActivity' => $latestActivity ? [
                 'id'    => $latestActivity->id,
                 'topic' => $latestActivity->topic,

@@ -317,6 +317,7 @@ const openAddMaterial = () => {
   isEditingMaterial.value = false;
   editingMaterialId.value = null;
   materialForm.reset();
+  delete materialForm._method;
   showMaterialModal.value = true;
 };
 
@@ -332,6 +333,7 @@ const openEditMaterial = (mat) => {
 
 const submitMaterialForm = () => {
   if (isEditingMaterial.value) {
+    materialForm._method = 'PUT';
     materialForm.post(`/superadmin/materials/${editingMaterialId.value}`, {
       forceFormData: true,
       onSuccess: () => {

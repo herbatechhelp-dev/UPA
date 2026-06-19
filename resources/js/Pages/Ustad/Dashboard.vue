@@ -185,6 +185,7 @@ const openUploadMaterial = () => {
   isEditingMaterial.value = false;
   editingMaterialId.value = null;
   materialForm.reset();
+  delete materialForm._method;
   showMaterialModal.value = true;
 };
 
@@ -199,6 +200,7 @@ const openEditMaterial = (mat) => {
 
 const submitMaterial = () => {
   if (isEditingMaterial.value) {
+    materialForm._method = 'PUT';
     materialForm.post(`/materials/${editingMaterialId.value}`, {
       forceFormData: true,
       onSuccess: () => {

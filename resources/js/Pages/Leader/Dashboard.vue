@@ -185,7 +185,7 @@ const handleLogout = () => {
       <div v-if="group" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <!-- Left Panel: Materials List -->
-        <div :class="group.is_delegated ? 'lg:col-span-1' : 'lg:col-span-3'" class="space-y-6">
+        <div :class="activeActivity ? 'lg:col-span-1' : 'lg:col-span-3'" class="space-y-6">
           <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
             <h2 class="text-base font-bold text-emerald-950 mb-4 pb-2 border-b border-emerald-50 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,7 +194,7 @@ const handleLogout = () => {
               Materi Kajian Terbaru
             </h2>
 
-            <div :class="group.is_delegated ? 'space-y-3' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'">
+            <div :class="activeActivity ? 'space-y-3' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'">
               <div 
                 v-for="material in materials" 
                 :key="material.id" 
@@ -220,20 +220,27 @@ const handleLogout = () => {
           </div>
         </div>
 
-        <!-- Right Panel: Delegated Attendance Check -->
-        <div v-if="group.is_delegated" class="lg:col-span-2 space-y-6">
+        <!-- Right Panel: Attendance Check -->
+        <div v-if="activeActivity" class="lg:col-span-2 space-y-6">
           <div class="bg-white rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
             
-            <!-- Conditional Header: Delegation Active -->
+            <!-- Conditional Header: Delegation Status -->
             <div 
-              class="p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-amber-50/50 border-amber-100"
+              class="p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300"
+              :class="group.is_delegated ? 'bg-amber-50/50 border-amber-100' : 'bg-emerald-50/50 border-emerald-100'"
             >
               <div>
                 <!-- Status Badge -->
                 <div class="inline-flex items-center space-x-1.5 mb-1.5">
-                  <span class="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  <span class="text-xs font-bold uppercase tracking-wider text-amber-800">
-                    Delegasi Approval Aktif
+                  <span 
+                    class="h-2.5 w-2.5 rounded-full"
+                    :class="group.is_delegated ? 'bg-amber-500 animate-pulse' : 'bg-emerald-600'"
+                  ></span>
+                  <span 
+                    class="text-xs font-bold uppercase tracking-wider"
+                    :class="group.is_delegated ? 'text-amber-800' : 'text-emerald-800'"
+                  >
+                    {{ group.is_delegated ? 'Delegasi Approval Aktif' : 'Akses Approval Ketua Kelompok' }}
                   </span>
                 </div>
 
@@ -242,12 +249,12 @@ const handleLogout = () => {
               </div>
 
               <!-- Delegation Time Limit Badge -->
-              <span v-if="group.delegated_until" class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold border border-amber-250">
+              <span v-if="group.is_delegated && group.delegated_until" class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold border border-amber-250">
                 Berlaku s/d {{ new Date(group.delegated_until).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) }}
               </span>
             </div>
 
-            <!-- Form layout if delegation active -->
+            <!-- Form layout if delegation active/leader approval access -->
             <div class="divide-y divide-gray-100">
               <div class="divide-y divide-gray-100">
                 <div v-for="member in group.members" :key="member.id" class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-gray-50/30 transition-colors">

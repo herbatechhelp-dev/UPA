@@ -33,8 +33,8 @@ class AttendanceApprovalController extends Controller
         elseif ($group->ustad_id === $currentUser->id && $currentUser->isUstad()) {
             $isAuthorized = true;
         } 
-        // Condition C: Logged-in user is the Ketua Kelompok (Leader) and delegation is active
-        elseif ($group->leader_id === $currentUser->id && $currentUser->isLeader() && $group->isDelegationActive()) {
+        // Condition C: Logged-in user is the Ketua Kelompok (Leader)
+        elseif ($group->leader_id === $currentUser->id && $currentUser->isLeader()) {
             $isAuthorized = true;
         }
 

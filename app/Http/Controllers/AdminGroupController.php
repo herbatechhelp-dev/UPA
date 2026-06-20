@@ -211,7 +211,7 @@ class AdminGroupController extends Controller
             'group_id' => ['required'],
             'month'    => ['required', 'integer', 'min:1', 'max:12'],
             'year'     => ['required', 'integer', 'min:2020', 'max:2100'],
-            'type'     => ['required', 'in:attendance,grades'],
+            'type'     => ['required', 'in:attendance,grades,attendance_monthly'],
         ]);
 
         $type = $validated['type'];
@@ -260,6 +260,116 @@ class AdminGroupController extends Controller
                         $statusName,
                         $att->approver?->name ?? '—',
                     ]);
+                }
+            } elseif ($type === 'attendance_monthly') {
+                if ($groupId === 'all') {
+                    fputcsv($file, ['No', 'Nama Anggota', 'Kelompok', 'Total Sesi', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Persentase Kehadiran']);
+
+                    $groups = Group::with('members')->get();
+                    $no = 1;
+                    foreach ($groups as $group) {
+                        $activities = \App\Models\Activity::where('group_id', $group->id)
+                            ->whereMonth('date', $month)
+                            ->whereYear('date', $year)
+                            ->get();
+
+                        $activityIds = $activities->pluck('id')->toArray();
+                        $totalActivities = count($activityIds);
+
+                        foreach ($group->members as $member) {
+                            $attendances = Attendance::where('user_id', $member->id)
+                                ->whereIn('activity_id', $activityIds)
+                                ->get();
+
+                            $present = $attendances->where('status', 'present')->count();
+                            $sick = $attendances->where('status', 'sick')->count();
+                            $permission = $attendances->where('status', 'permission')->count();
+                            $absent = $attendances->where('status', 'absent')->count();
+
+                            $percentage = $totalActivities > 0 ? round(($present / $totalActivities) * 100, 2) : 0;
+
+                            fputcsv($file, [
+                                $no++,
+                                $member->name,
+                                $group->name,
+                                $totalActivities,
+                                $present,
+                                $sick,
+                                $permission,
+                                $absent,
+                                $percentage . '%'
+                            ]);
+                        }
+                    }
+                } else {
+                    $group = Group::with('members')->findOrFail($groupId);
+                    $activities = \App\Models\Activity::where('group_id', $groupId)
+                        ->whereMonth('date', $month)
+                        ->whereYear('date', $year)
+                        ->orderBy('date', 'asc')
+                        ->get();
+
+                    $headersRow = ['No', 'Nama Anggota', 'Kelompok'];
+                    foreach ($activities as $idx => $act) {
+                        $dateStr = $act->date->format('d/m/Y');
+                        $headersRow[] = "P" . ($idx + 1) . " (" . $dateStr . " - " . $act->topic . ")";
+                    }
+                    $headersRow = array_merge($headersRow, ['Hadir', 'Sakit', 'Izin', 'Alpa', 'Persentase Kehadiran']);
+                    fputcsv($file, $headersRow);
+
+                    $no = 1;
+                    $activityIds = $activities->pluck('id')->toArray();
+                    $totalActivities = count($activityIds);
+
+                    foreach ($group->members as $member) {
+                        $attendances = Attendance::where('user_id', $member->id)
+                            ->whereIn('activity_id', $activityIds)
+                            ->get()
+                            ->keyBy('activity_id');
+
+                        $row = [
+                            $no++,
+                            $member->name,
+                            $group->name,
+                        ];
+
+                        $present = 0;
+                        $sick = 0;
+                        $permission = 0;
+                        $absent = 0;
+
+                        foreach ($activities as $act) {
+                            $att = $attendances->get($act->id);
+                            if ($att) {
+                                $statusName = match ($att->status) {
+                                    'present'    => 'H',
+                                    'sick'       => 'S',
+                                    'permission' => 'I',
+                                    'absent'     => 'A',
+                                    default      => $att->status
+                                };
+
+                                if ($att->status === 'present') $present++;
+                                elseif ($att->status === 'sick') $sick++;
+                                elseif ($att->status === 'permission') $permission++;
+                                elseif ($att->status === 'absent') $absent++;
+
+                                $row[] = $statusName;
+                            } else {
+                                $row[] = '—';
+                            }
+                        }
+
+                        $percentage = $totalActivities > 0 ? round(($present / $totalActivities) * 100, 2) : 0;
+
+                        $row[] = $present;
+                        $row[] = $sick;
+                        $row[] = $permission;
+                        $row[] = $absent;
+                        $row[] = $percentage . '%';
+
+                        fputcsv($file, $row);
+                    }
                 }
             } else {
                 fputcsv($file, ['Nama Anggota', 'Kelompok', 'Bulan', 'Tahun', 'Skor', 'Catatan Perkembangan', 'Ustad Penilai']);

@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-BgbZeFIJ.css",
+    "file": "assets/app-V2kIdlgl.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-BBtRtN9I.js",
+    "file": "assets/Dashboard-DyTXMPxw.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -13,11 +13,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-8aoF0ObH.css"
+      "assets/Dashboard-BDxdhw7E.css"
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-C_tggP5Q.js",
+    "file": "assets/Login-DZ_uupi0.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -26,7 +26,7 @@
     ]
   },
   "resources/js/Pages/Auth/Register.vue": {
-    "file": "assets/Register-DKlpBj-0.js",
+    "file": "assets/Register-DXhSPvFX.js",
     "name": "Register",
     "src": "resources/js/Pages/Auth/Register.vue",
     "isDynamicEntry": true,
@@ -35,7 +35,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-Bf1IOMAo.js",
+    "file": "assets/Dashboard-CAFcVIXn.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -43,11 +43,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-D7ZTISo1.css"
+      "assets/Dashboard-DuNPNLGR.css"
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-jV0zQjRf.js",
+    "file": "assets/Dashboard-FN5EDGqs.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -59,7 +59,7 @@
     ]
   },
   "resources/js/Pages/Quran.vue": {
-    "file": "assets/Quran-D8iTpQFw.js",
+    "file": "assets/Quran-C-0cmt_p.js",
     "name": "Quran",
     "src": "resources/js/Pages/Quran.vue",
     "isDynamicEntry": true,
@@ -71,7 +71,7 @@
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-CGnwclMW.js",
+    "file": "assets/Dashboard-HYumw9Hl.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -83,7 +83,7 @@
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-BbQKhiXS.js",
+    "file": "assets/Dashboard-D2fDPUkB.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bu06rtsD.js",
+    "file": "assets/app-Chx7t3Z-.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -110,7 +110,7 @@
       "resources/js/Pages/Ustad/Dashboard.vue"
     ],
     "css": [
-      "assets/app-DGYMeqaY.css"
+      "assets/app-D9qxyG_M.css"
     ]
   }
 }

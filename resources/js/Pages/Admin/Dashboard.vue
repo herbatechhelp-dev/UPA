@@ -998,13 +998,18 @@ const rejectPendingUser = (user) => {
             <!-- Report Type -->
             <div class="space-y-2">
               <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Jenis Laporan</label>
-              <div class="grid grid-cols-2 gap-4">
-                <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all"
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all text-center text-xs"
                   :class="reportForm.type === 'attendance' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600'">
                   <input type="radio" v-model="reportForm.type" value="attendance" class="sr-only" />
-                  <span>Rekap Absensi</span>
+                  <span>Log Absensi Sesi</span>
                 </label>
-                <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all"
+                <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all text-center text-xs"
+                  :class="reportForm.type === 'attendance_monthly' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600'">
+                  <input type="radio" v-model="reportForm.type" value="attendance_monthly" class="sr-only" />
+                  <span>Rekap Absensi Bulanan</span>
+                </label>
+                <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all text-center text-xs"
                   :class="reportForm.type === 'grades' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600'">
                   <input type="radio" v-model="reportForm.type" value="grades" class="sr-only" />
                   <span>Rekap Nilai Ustad</span>

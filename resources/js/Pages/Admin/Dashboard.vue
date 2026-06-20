@@ -250,8 +250,11 @@ const submitMaterialForm = () => {
       title: materialForm.title,
       content: materialForm.content,
       ustad_id: materialForm.ustad_id,
-      file: materialForm.file,
     };
+    // Hanya tambahkan file ke data jika user benar-benar memilih file baru
+    if (materialForm.file) {
+      data.file = materialForm.file;
+    }
     router.post(`/admin/materials/${editingMaterialId.value}`, data, {
       forceFormData: true,
       onSuccess: () => {

@@ -303,15 +303,16 @@ class SuperadminDashboardController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            if (!$file->isValid()) {
-                return redirect()->back()->withErrors(['file' => 'File tidak valid: ' . $file->getErrorMessage()])->withInput();
+            $uploadedFile = $request->file('file');
+            if (!$uploadedFile->isValid() || empty($uploadedFile->getPathname())) {
+                return redirect()->back()->withErrors(['file' => 'File tidak valid atau gagal diunggah. Periksa ukuran file (maks 25MB).'])->withInput();
             }
             try {
-                if (!Storage::disk('public')->exists('materials')) {
-                    Storage::disk('public')->makeDirectory('materials');
+                $storedPath = $uploadedFile->store('materials', 'public');
+                if (!$storedPath) {
+                    throw new \RuntimeException('Penyimpanan file gagal.');
                 }
-                $filePath = $file->store('materials', 'public');
+                $filePath = $storedPath;
             } catch (\Exception $e) {
                 Log::error('Material upload failed: ' . $e->getMessage());
                 return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();
@@ -348,18 +349,19 @@ class SuperadminDashboardController extends Controller
         ];
 
         if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            if (!$file->isValid()) {
-                return redirect()->back()->withErrors(['file' => 'File tidak valid: ' . $file->getErrorMessage()])->withInput();
+            $uploadedFile = $request->file('file');
+            if (!$uploadedFile->isValid() || empty($uploadedFile->getPathname())) {
+                return redirect()->back()->withErrors(['file' => 'File tidak valid atau gagal diunggah. Periksa ukuran file (maks 25MB).'])->withInput();
             }
             try {
                 if ($material->file_path) {
                     Storage::disk('public')->delete($material->file_path);
                 }
-                if (!Storage::disk('public')->exists('materials')) {
-                    Storage::disk('public')->makeDirectory('materials');
+                $storedPath = $uploadedFile->store('materials', 'public');
+                if (!$storedPath) {
+                    throw new \RuntimeException('Penyimpanan file gagal.');
                 }
-                $updateData['file_path'] = $file->store('materials', 'public');
+                $updateData['file_path'] = $storedPath;
             } catch (\Exception $e) {
                 Log::error('Material update upload failed: ' . $e->getMessage());
                 return redirect()->back()->withErrors(['file' => 'Gagal mengunggah file: ' . $e->getMessage()])->withInput();

@@ -199,6 +199,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/download', [AdminGroupController::class, 'downloadReport'])
         ->name('reports.download');
 
+    Route::get('/reports/recap-data', [AdminGroupController::class, 'getRecapData'])
+        ->name('reports.recap-data');
+
     // Material download — all authenticated users
     Route::get('/materials/{material}/download', [MaterialController::class, 'download'])
         ->name('materials.download');

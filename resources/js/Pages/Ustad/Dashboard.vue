@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 
 // Props passed from Laravel Inertia Controller
@@ -354,6 +354,39 @@ const downloadUstadReport = () => {
 const handleLogout = () => {
   router.post('/logout');
 };
+
+const showRecapFilter = ref({
+  group_id: props.groups[0]?.id || 'all',
+  month: new Date().getMonth() + 1,
+  year: new Date().getFullYear()
+});
+const isRecapLoading = ref(false);
+const recapData = ref(null);
+
+const fetchRecapData = async () => {
+  isRecapLoading.value = true;
+  recapData.value = null;
+  try {
+    const response = await fetch(`/reports/recap-data?group_id=${showRecapFilter.value.group_id}&month=${showRecapFilter.value.month}&year=${showRecapFilter.value.year}`);
+    if (response.ok) {
+      recapData.value = await response.json();
+    } else {
+      const err = await response.json();
+      alert(err.error || 'Gagal memuat rekap absensi.');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Terjadi kesalahan koneksi.');
+  } finally {
+    isRecapLoading.value = false;
+  }
+};
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'recap' && !recapData.value) {
+    fetchRecapData();
+  }
+});
 </script>
 
 <template>
@@ -516,7 +549,8 @@ const handleLogout = () => {
             { key: 'materials', label: 'Materi Kajian' },
             { key: 'activities', label: 'Sesi Kajian' },
             { key: 'attendances', label: 'Log Presensi' },
-            { key: 'grades', label: 'Penilaian Bulanan' }
+            { key: 'grades', label: 'Penilaian Bulanan' },
+            { key: 'recap', label: 'Rekap Absensi Bulanan' }
           ]" 
           :key="tab.key"
           @click="activeTab = tab.key"
@@ -1076,6 +1110,162 @@ const handleLogout = () => {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- TAB 6: REKAP ABSENSI BULANAN -->
+        <div v-if="activeTab === 'recap'" class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 animate-slide-in">
+          <div class="mb-6 border-b border-gray-100 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-emerald-950">Rekap Absensi Bulanan Binaan</h2>
+              <p class="text-xs text-gray-500 font-medium">Tinjau rekapitulasi kehadiran mutarabbi binaan Anda secara interaktif di halaman ini.</p>
+            </div>
+          </div>
+
+          <!-- Filters Form -->
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Kelompok Binaan</label>
+              <select v-model="showRecapFilter.group_id" class="w-full border border-gray-250 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                <option value="all">Semua Kelompok Binaan</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Bulan</label>
+              <select v-model="showRecapFilter.month" class="w-full border border-gray-250 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                <option v-for="m in 12" :key="m" :value="m">
+                  {{ new Date(2026, m-1, 1).toLocaleString('id-ID', { month: 'long' }) }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Tahun</label>
+              <select v-model="showRecapFilter.year" class="w-full border border-gray-250 rounded-lg p-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                <option v-for="y in [2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
+              </select>
+            </div>
+            <div>
+              <button @click="fetchRecapData" :disabled="isRecapLoading" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1">
+                <span v-if="isRecapLoading">Memuat...</span>
+                <span v-else>Tampilkan Rekap</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading Spinner -->
+          <div v-if="isRecapLoading" class="py-12 flex flex-col items-center justify-center space-y-3">
+            <div class="animate-spin rounded-full h-8 w-8 border-4 border-emerald-750 border-t-transparent"></div>
+            <span class="text-xs text-gray-500 font-medium">Sedang memproses data rekapitulasi...</span>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="!recapData" class="py-12 text-center text-gray-400 text-xs font-medium">
+            Silakan pilih filter di atas dan klik "Tampilkan Rekap" untuk memuat data.
+          </div>
+
+          <!-- Data Grid -->
+          <div v-else class="space-y-4">
+            <!-- Summary Table (All Groups) -->
+            <div v-if="recapData.type === 'summary'" class="overflow-x-auto rounded-lg border border-gray-150">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider border-b border-gray-150">
+                    <th class="py-3 px-4" v-for="hdr in recapData.headers" :key="hdr">{{ hdr }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="row in recapData.rows" :key="row.no" class="hover:bg-gray-50/40">
+                    <td class="py-3 px-4 font-bold text-gray-900">{{ row.no }}</td>
+                    <td class="py-3 px-4 font-bold text-emerald-850">{{ row.member_name }}</td>
+                    <td class="py-3 px-4 text-gray-655 font-semibold">{{ row.group_name }}</td>
+                    <td class="py-3 px-4 text-gray-600">{{ row.total_sessions }}</td>
+                    <td class="py-3 px-4 text-emerald-700 font-bold">{{ row.present }}</td>
+                    <td class="py-3 px-4 text-amber-700 font-semibold">{{ row.sick }}</td>
+                    <td class="py-3 px-4 text-blue-700 font-semibold">{{ row.permission }}</td>
+                    <td class="py-3 px-4 text-red-700 font-semibold">{{ row.absent }}</td>
+                    <td class="py-3 px-4">
+                      <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] border border-emerald-100">
+                        {{ row.percentage }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr v-if="recapData.rows.length === 0">
+                    <td colspan="9" class="py-6 text-center text-gray-400 italic">Tidak ada data anggota atau sesi halaqah pada periode ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Detail Table (Specific Group Matrix) -->
+            <div v-else-if="recapData.type === 'detail'" class="overflow-x-auto rounded-lg border border-gray-150">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider border-b border-gray-150">
+                    <th class="py-3 px-4">No</th>
+                    <th class="py-3 px-4">Nama Anggota</th>
+                    <th class="py-3 px-4">Kelompok</th>
+                    <th v-for="act in recapData.activities" :key="act.id" class="py-3 px-2 text-center select-none">
+                      <span class="underline decoration-dotted cursor-help block font-bold text-emerald-950" :title="act.date + ' - ' + act.topic">
+                        {{ act.label }}
+                      </span>
+                    </th>
+                    <th class="py-3 px-3 text-center">H</th>
+                    <th class="py-3 px-3 text-center">S</th>
+                    <th class="py-3 px-3 text-center">I</th>
+                    <th class="py-3 px-3 text-center">A</th>
+                    <th class="py-3 px-4 text-center">Persentase</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="row in recapData.rows" :key="row.no" class="hover:bg-gray-50/40">
+                    <td class="py-3 px-4 font-bold text-gray-900">{{ row.no }}</td>
+                    <td class="py-3 px-4 font-bold text-emerald-850">{{ row.member_name }}</td>
+                    <td class="py-3 px-4 text-gray-655 font-semibold">{{ row.group_name }}</td>
+                    
+                    <!-- Session Cells matrix -->
+                    <td v-for="act in recapData.activities" :key="act.id" class="py-3 px-2 text-center font-bold">
+                      <span 
+                        class="inline-block w-6 h-6 leading-6 rounded text-[10px] text-center"
+                        :class="{
+                          'bg-emerald-50 text-emerald-700 border border-emerald-150': row.sessions[act.id] === 'H',
+                          'bg-amber-50 text-amber-700 border border-amber-150': row.sessions[act.id] === 'S',
+                          'bg-blue-50 text-blue-700 border border-blue-150': row.sessions[act.id] === 'I',
+                          'bg-red-50 text-red-700 border border-red-150': row.sessions[act.id] === 'A',
+                          'bg-gray-50 text-gray-400 border border-gray-150': row.sessions[act.id] === '—'
+                        }"
+                      >
+                        {{ row.sessions[act.id] }}
+                      </span>
+                    </td>
+
+                    <td class="py-3 px-3 text-center text-emerald-700 font-bold">{{ row.present }}</td>
+                    <td class="py-3 px-3 text-center text-amber-700 font-bold">{{ row.sick }}</td>
+                    <td class="py-3 px-3 text-center text-blue-700 font-bold">{{ row.permission }}</td>
+                    <td class="py-3 px-3 text-center text-red-700 font-bold">{{ row.absent }}</td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] border border-emerald-100">
+                        {{ row.percentage }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr v-if="recapData.rows.length === 0">
+                    <td :colspan="8 + recapData.activities.length" class="py-6 text-center text-gray-400 italic">Tidak ada data anggota atau sesi halaqah pada periode ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Legend for Matrix -->
+            <div v-if="recapData.type === 'detail'" class="flex flex-wrap items-center gap-4 text-[10px] text-gray-500 font-semibold bg-gray-50 p-3 rounded-lg border border-gray-150">
+              <span class="text-gray-700 uppercase tracking-wider">Keterangan:</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 bg-emerald-50 border border-emerald-150 rounded text-center text-[9px] font-bold text-emerald-700">H</span> Hadir</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 bg-amber-50 border border-amber-150 rounded text-center text-[9px] font-bold text-amber-700">S</span> Sakit</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 bg-blue-50 border border-blue-150 rounded text-center text-[9px] font-bold text-blue-700">I</span> Izin</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 bg-red-50 border border-red-150 rounded text-center text-[9px] font-bold text-red-700">A</span> Alpa (Tanpa Keterangan)</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 bg-gray-50 border border-gray-150 rounded text-center text-[9px] font-bold text-gray-400">—</span> Belum Input Sesi</span>
+              <span class="text-emerald-950 font-bold ml-auto">* Arahkan kursor pada kode pertemuan (P1, P2) untuk melihat info tanggal & topik kajian.</span>
+            </div>
           </div>
         </div>
 

@@ -446,6 +446,176 @@ class AdminGroupController extends Controller
     }
 
     /**
+     * Get monthly attendance recap data as JSON for live web-view preview.
+     */
+    public function getRecapData(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'group_id' => ['required'],
+            'month'    => ['required', 'integer', 'min:1', 'max:12'],
+            'year'     => ['required', 'integer', 'min:2020', 'max:2100'],
+        ]);
+
+        $month = (int) $validated['month'];
+        $year = (int) $validated['year'];
+        $groupId = $validated['group_id'];
+
+        $currentUser = Auth::user();
+
+        // Role-based authorization & group scope constraints
+        if ($currentUser->isLeader()) {
+            $group = Group::where('leader_id', $currentUser->id)->first();
+            if (!$group) {
+                return response()->json(['error' => 'Anda tidak terdaftar sebagai ketua kelompok mana pun.'], 403);
+            }
+            $groupId = (string) $group->id;
+        } elseif ($currentUser->isUstad()) {
+            if ($groupId !== 'all') {
+                $group = Group::findOrFail($groupId);
+                if ($group->ustad_id !== $currentUser->id) {
+                    return response()->json(['error' => 'Anda bukan pembina dari kelompok ini.'], 403);
+                }
+            }
+        } elseif (!$currentUser->isAdmin() && !$currentUser->isSuperadmin()) {
+            return response()->json(['error' => 'Anda tidak memiliki hak akses untuk melihat laporan ini.'], 403);
+        }
+
+        if ($groupId === 'all') {
+            $groupsQuery = Group::with('members');
+            if ($currentUser->isUstad()) {
+                $groupsQuery->where('ustad_id', $currentUser->id);
+            }
+            $groups = $groupsQuery->get();
+            $rows = [];
+            $no = 1;
+
+            foreach ($groups as $group) {
+                $activities = \App\Models\Activity::where('group_id', $group->id)
+                    ->whereMonth('date', $month)
+                    ->whereYear('date', $year)
+                    ->get();
+
+                $activityIds = $activities->pluck('id')->toArray();
+                $totalActivities = count($activityIds);
+
+                foreach ($group->members as $member) {
+                    $attendances = Attendance::where('user_id', $member->id)
+                        ->whereIn('activity_id', $activityIds)
+                        ->get();
+
+                    $present = $attendances->where('status', 'present')->count();
+                    $sick = $attendances->where('status', 'sick')->count();
+                    $permission = $attendances->where('status', 'permission')->count();
+                    $absent = $attendances->where('status', 'absent')->count();
+
+                    $percentage = $totalActivities > 0 ? round(($present / $totalActivities) * 100, 2) : 0;
+
+                    $rows[] = [
+                        'no' => $no++,
+                        'member_name' => $member->name,
+                        'group_name' => $group->name,
+                        'total_sessions' => $totalActivities,
+                        'present' => $present,
+                        'sick' => $sick,
+                        'permission' => $permission,
+                        'absent' => $absent,
+                        'percentage' => $percentage . '%'
+                    ];
+                }
+            }
+
+            return response()->json([
+                'type' => 'summary',
+                'headers' => ['No', 'Nama Anggota', 'Kelompok', 'Total Sesi', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Persentase Kehadiran'],
+                'rows' => $rows
+            ]);
+        } else {
+            $group = Group::with('members')->findOrFail($groupId);
+            if ($currentUser->isLeader() && $group->leader_id !== $currentUser->id) {
+                return response()->json(['error' => 'Anda bukan ketua kelompok dari kelompok ini.'], 403);
+            }
+            if ($currentUser->isUstad() && $group->ustad_id !== $currentUser->id) {
+                return response()->json(['error' => 'Anda bukan pembina dari kelompok ini.'], 403);
+            }
+
+            $activities = \App\Models\Activity::where('group_id', $groupId)
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->orderBy('date', 'asc')
+                ->get();
+
+            $activityIds = $activities->pluck('id')->toArray();
+            $totalActivities = count($activityIds);
+
+            $formattedActivities = [];
+            foreach ($activities as $idx => $act) {
+                $formattedActivities[] = [
+                    'id' => $act->id,
+                    'label' => 'P' . ($idx + 1),
+                    'date' => $act->date->format('d/m/Y'),
+                    'topic' => $act->topic
+                ];
+            }
+
+            $rows = [];
+            $no = 1;
+
+            foreach ($group->members as $member) {
+                $attendances = Attendance::where('user_id', $member->id)
+                    ->whereIn('activity_id', $activityIds)
+                    ->get()
+                    ->keyBy('activity_id');
+
+                $sessionStatuses = [];
+                $present = 0;
+                $sick = 0;
+                $permission = 0;
+                $absent = 0;
+
+                foreach ($activities as $act) {
+                    $att = $attendances->get($act->id);
+                    if ($att) {
+                        $statusName = match ($att->status) {
+                            'present'    => 'H',
+                            'sick'       => 'S',
+                            'permission' => 'I',
+                            'absent'     => 'A',
+                            default      => $att->status
+                        };
+                        if ($att->status === 'present') $present++;
+                        elseif ($att->status === 'sick') $sick++;
+                        elseif ($att->status === 'permission') $permission++;
+                        elseif ($att->status === 'absent') $absent++;
+                    } else {
+                        $statusName = '—';
+                    }
+                    $sessionStatuses[$act->id] = $statusName;
+                }
+
+                $percentage = $totalActivities > 0 ? round(($present / $totalActivities) * 100, 2) : 0;
+
+                $rows[] = [
+                    'no' => $no++,
+                    'member_name' => $member->name,
+                    'group_name' => $group->name,
+                    'sessions' => $sessionStatuses,
+                    'present' => $present,
+                    'sick' => $sick,
+                    'permission' => $permission,
+                    'absent' => $absent,
+                    'percentage' => $percentage . '%'
+                ];
+            }
+
+            return response()->json([
+                'type' => 'detail',
+                'activities' => $formattedActivities,
+                'rows' => $rows
+            ]);
+        }
+    }
+
+    /**
      * Store a newly uploaded Material.
      */
     public function storeMaterial(Request $request): RedirectResponse

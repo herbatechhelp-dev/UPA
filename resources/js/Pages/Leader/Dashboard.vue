@@ -63,6 +63,16 @@ const rejectMember = (member) => {
   }
 };
 
+const recapForm = ref({
+  month: new Date().getMonth() + 1,
+  year: new Date().getFullYear()
+});
+
+const downloadRecap = () => {
+  const url = `/reports/download?group_id=${props.group?.id}&month=${recapForm.value.month}&year=${recapForm.value.year}&type=attendance_monthly`;
+  window.open(url, '_blank');
+};
+
 const handleLogout = () => {
   router.post('/logout');
 };
@@ -216,6 +226,46 @@ const handleLogout = () => {
                 </a>
                 <span v-else class="text-xs text-gray-400 mt-2 block">Teks Saja</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Rekap Absensi Bulanan Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+            <h2 class="text-base font-bold text-emerald-950 mb-3 pb-2 border-b border-emerald-50 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Unduh Rekap Absensi Bulanan
+            </h2>
+            <p class="text-xs text-gray-500 mb-4 font-medium">Unduh rekapitulasi kehadiran bulanan seluruh anggota kelompok dalam format CSV.</p>
+            
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Bulan</label>
+                  <select v-model="recapForm.month" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                    <option v-for="m in 12" :key="m" :value="m">
+                      {{ new Date(2026, m-1, 1).toLocaleString('id-ID', { month: 'long' }) }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Tahun</label>
+                  <select v-model="recapForm.year" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                    <option v-for="y in [2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
+                  </select>
+                </div>
+              </div>
+              
+              <button 
+                @click="downloadRecap"
+                class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg xmlns="http://www.w3.org/2005/svg" class="h-4 w-4 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Unduh Laporan</span>
+              </button>
             </div>
           </div>
         </div>

@@ -219,6 +219,29 @@ class AdminGroupController extends Controller
         $year = (int) $validated['year'];
         $groupId = $validated['group_id'];
 
+        $currentUser = Auth::user();
+
+        // Role-based authorization & group scope constraints
+        if ($currentUser->isLeader()) {
+            $group = Group::where('leader_id', $currentUser->id)->first();
+            if (!$group) {
+                abort(403, 'Anda tidak terdaftar sebagai ketua kelompok mana pun.');
+            }
+            $groupId = (string) $group->id;
+            if ($type === 'grades') {
+                abort(403, 'Ketua Kelompok tidak diizinkan mengunduh rekap nilai.');
+            }
+        } elseif ($currentUser->isUstad()) {
+            if ($groupId !== 'all') {
+                $group = Group::findOrFail($groupId);
+                if ($group->ustad_id !== $currentUser->id) {
+                    abort(403, 'Anda bukan pembina dari kelompok ini.');
+                }
+            }
+        } elseif (!$currentUser->isAdmin() && !$currentUser->isSuperadmin()) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mengunduh laporan ini.');
+        }
+
         $fileName = "rekap-{$type}-bulan-{$month}-{$year}.csv";
 
         $headers = [
@@ -229,7 +252,7 @@ class AdminGroupController extends Controller
             "Expires"             => "0"
         ];
 
-        $callback = function () use ($type, $month, $year, $groupId) {
+        $callback = function () use ($type, $month, $year, $groupId, $currentUser) {
             $file = fopen('php://output', 'w');
 
             if ($type === 'attendance') {
@@ -241,6 +264,10 @@ class AdminGroupController extends Controller
 
                 if ($groupId !== 'all') {
                     $query->whereHas('activity', fn ($q) => $q->where('group_id', $groupId));
+                } else {
+                    if ($currentUser->isUstad()) {
+                        $query->whereHas('activity.group', fn ($q) => $q->where('ustad_id', $currentUser->id));
+                    }
                 }
 
                 foreach ($query->get() as $att) {
@@ -265,7 +292,11 @@ class AdminGroupController extends Controller
                 if ($groupId === 'all') {
                     fputcsv($file, ['No', 'Nama Anggota', 'Kelompok', 'Total Sesi', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Persentase Kehadiran']);
 
-                    $groups = Group::with('members')->get();
+                    $groupsQuery = Group::with('members');
+                    if ($currentUser->isUstad()) {
+                        $groupsQuery->where('ustad_id', $currentUser->id);
+                    }
+                    $groups = $groupsQuery->get();
                     $no = 1;
                     foreach ($groups as $group) {
                         $activities = \App\Models\Activity::where('group_id', $group->id)
@@ -303,6 +334,13 @@ class AdminGroupController extends Controller
                     }
                 } else {
                     $group = Group::with('members')->findOrFail($groupId);
+                    if ($currentUser->isLeader() && $group->leader_id !== $currentUser->id) {
+                        abort(403, 'Anda bukan ketua kelompok dari kelompok ini.');
+                    }
+                    if ($currentUser->isUstad() && $group->ustad_id !== $currentUser->id) {
+                        abort(403, 'Anda bukan pembina dari kelompok ini.');
+                    }
+
                     $activities = \App\Models\Activity::where('group_id', $groupId)
                         ->whereMonth('date', $month)
                         ->whereYear('date', $year)
@@ -380,6 +418,10 @@ class AdminGroupController extends Controller
 
                 if ($groupId !== 'all') {
                     $query->whereHas('user.groups', fn ($q) => $q->where('groups.id', $groupId));
+                } else {
+                    if ($currentUser->isUstad()) {
+                        $query->whereHas('user.groups', fn ($q) => $q->where('groups.ustad_id', $currentUser->id));
+                    }
                 }
 
                 foreach ($query->get() as $gr) {

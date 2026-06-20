@@ -333,6 +333,24 @@ const deleteActivity = (activityId) => {
   }
 };
 
+const showDownloadReportModal = ref(false);
+const ustadReportForm = ref({
+  group_id: props.groups[0]?.id || 'all',
+  month: new Date().getMonth() + 1,
+  year: new Date().getFullYear(),
+  type: 'attendance_monthly', // 'attendance' | 'attendance_monthly' | 'grades'
+});
+
+const openDownloadReportModal = () => {
+  showDownloadReportModal.value = true;
+};
+
+const downloadUstadReport = () => {
+  const url = `/reports/download?group_id=${ustadReportForm.value.group_id}&month=${ustadReportForm.value.month}&year=${ustadReportForm.value.year}&type=${ustadReportForm.value.type}`;
+  window.open(url, '_blank');
+  showDownloadReportModal.value = false;
+};
+
 const handleLogout = () => {
   router.post('/logout');
 };
@@ -578,6 +596,10 @@ const handleLogout = () => {
               
               <button @click="openBulkGrade" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-semibold text-sm py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 transition-all">
                 <span>Buat Rekap Nilai Bulanan</span>
+              </button>
+
+              <button @click="openDownloadReportModal" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-semibold text-sm py-2.5 px-4 rounded-lg flex items-center justify-center space-x-2 transition-all">
+                <span>Unduh Rekap Laporan</span>
               </button>
             </div>
           </div>
@@ -1323,6 +1345,74 @@ const handleLogout = () => {
 
           <div class="pt-4 border-t border-gray-100 flex justify-end">
             <button type="button" @click="showAttendanceModal = false" class="bg-white border border-gray-200 text-gray-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: UNDUH REKAP LAPORAN (USTAD) -->
+    <div v-if="showDownloadReportModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm" @click="showDownloadReportModal = false"></div>
+      <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-50 animate-slide-up">
+        <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
+          <h3 class="text-base font-bold">Unduh Rekap Laporan Halaqah</h3>
+          <button @click="showDownloadReportModal = false" class="text-emerald-200 hover:text-white transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-5 space-y-4">
+          <p class="text-xs text-gray-500 font-medium">
+            Unduh berkas rekapitulasi kehadiran atau penilaian bulanan untuk seluruh kelompok halaqah yang Anda bina.
+          </p>
+          
+          <div class="space-y-3.5">
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Kelompok Binaan</label>
+              <select v-model="ustadReportForm.group_id" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                <option value="all">Semua Kelompok Binaan Anda</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Tipe Laporan</label>
+              <select v-model="ustadReportForm.type" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                <option value="attendance_monthly">Rekap Absensi Bulanan (Tanpa Penilaian)</option>
+                <option value="attendance">Detail Absensi Sesi Kajian</option>
+                <option value="grades">Rekap Penilaian Bulanan</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Bulan</label>
+                <select v-model="ustadReportForm.month" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                  <option v-for="m in 12" :key="m" :value="m">
+                    {{ new Date(2026, m-1, 1).toLocaleString('id-ID', { month: 'long' }) }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Tahun</label>
+                <select v-model="ustadReportForm.year" class="w-full border border-gray-250 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none shadow-sm">
+                  <option v-for="y in [2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 flex justify-end space-x-3">
+            <button type="button" @click="showDownloadReportModal = false" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">Batal</button>
+            <button @click="downloadUstadReport" class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Unduh CSV</span>
+            </button>
           </div>
         </div>
       </div>

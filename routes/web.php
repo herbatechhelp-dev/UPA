@@ -98,9 +98,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/groups/{group}/members/{user}', [AdminGroupController::class, 'detachMember'])
             ->name('admin.groups.detach-member');
 
-        // Reports download
-        Route::get('/admin/reports/download', [AdminGroupController::class, 'downloadReport'])
-            ->name('admin.reports.download');
 
         // Material CRUD
         Route::post('/admin/materials', [AdminGroupController::class, 'storeMaterial'])->name('admin.materials.store');
@@ -197,6 +194,10 @@ Route::middleware(['auth'])->group(function () {
     // Delegation toggle — Admin OR Ustad (controller checks authorization)
     Route::post('/groups/{group}/delegation/toggle', [AttendanceApprovalController::class, 'toggleDelegation'])
         ->name('groups.delegation.toggle');
+
+    // Reports download — shared route (Admin, Ustad, Leader)
+    Route::get('/reports/download', [AdminGroupController::class, 'downloadReport'])
+        ->name('reports.download');
 
     // Material download — all authenticated users
     Route::get('/materials/{material}/download', [MaterialController::class, 'download'])

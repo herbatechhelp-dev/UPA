@@ -397,7 +397,7 @@ const deleteAttendance = (attendanceId) => {
 };
 
 const downloadReport = () => {
-  const url = `/admin/reports/download?group_id=${reportForm.group_id}&month=${reportForm.month}&year=${reportForm.year}&type=${reportForm.type}`;
+  const url = `/reports/download?group_id=${reportForm.group_id}&month=${reportForm.month}&year=${reportForm.year}&type=${reportForm.type}`;
   window.open(url, '_blank');
 };
 

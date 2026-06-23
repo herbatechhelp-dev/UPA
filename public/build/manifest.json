@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-9vvEbJkx.css",
+    "file": "assets/app--zMjkDY-.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-DSZ97Y-f.js",
+    "file": "assets/Dashboard-JUOypRpK.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -17,7 +17,7 @@
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-m5jq35P3.js",
+    "file": "assets/Login-BFOeq8WC.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -26,7 +26,7 @@
     ]
   },
   "resources/js/Pages/Auth/Register.vue": {
-    "file": "assets/Register-DhzDOpj6.js",
+    "file": "assets/Register-BsuhwGr-.js",
     "name": "Register",
     "src": "resources/js/Pages/Auth/Register.vue",
     "isDynamicEntry": true,
@@ -35,7 +35,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-Bl95rAb9.js",
+    "file": "assets/Dashboard-BnRLGtUq.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -47,7 +47,7 @@
     ]
   },
   "resources/js/Pages/Matsurat.vue": {
-    "file": "assets/Matsurat-2aWa0ydu.js",
+    "file": "assets/Matsurat-JGnSMTuC.js",
     "name": "Matsurat",
     "src": "resources/js/Pages/Matsurat.vue",
     "isDynamicEntry": true,
@@ -55,11 +55,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Matsurat-COcNuYJ4.css"
+      "assets/Matsurat-QHlD9eDz.css"
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-C1Z0-7dn.js",
+    "file": "assets/Dashboard-BFxaqweC.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -71,7 +71,7 @@
     ]
   },
   "resources/js/Pages/Quran.vue": {
-    "file": "assets/Quran-Bu_i_bFU.js",
+    "file": "assets/Quran-CXoTy5R3.js",
     "name": "Quran",
     "src": "resources/js/Pages/Quran.vue",
     "isDynamicEntry": true,
@@ -83,7 +83,7 @@
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-DdlmDUdC.js",
+    "file": "assets/Dashboard-DDdA2-K0.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-aEo2nxJT.js",
+    "file": "assets/Dashboard-BpVYdPa4.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -107,7 +107,7 @@
     ]
   },
   "resources/js/Pages/Welcome.vue": {
-    "file": "assets/Welcome-DBlfiUrF.js",
+    "file": "assets/Welcome-D9HtOWb5.js",
     "name": "Welcome",
     "src": "resources/js/Pages/Welcome.vue",
     "isDynamicEntry": true,
@@ -119,7 +119,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CWVo7YWe.js",
+    "file": "assets/app-SugklXU7.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -136,7 +136,7 @@
       "resources/js/Pages/Welcome.vue"
     ],
     "css": [
-      "assets/app-Cym4uFuy.css"
+      "assets/app-DaT6sNc9.css"
     ]
   }
 }

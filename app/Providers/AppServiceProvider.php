@@ -8,12 +8,11 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->bind('path.public', function() {
+            return is_dir(base_path('public_html')) ? base_path('public_html') : base_path('public');
+        });
     }
 
     /**

@@ -7,8 +7,9 @@ const props = defineProps({
 });
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const activeTimeMode  = ref('pagi');   // 'pagi' | 'petang'
-const searchQuery     = ref('');
+const activeTimeMode   = ref('pagi');   // 'pagi' | 'petang'
+const activeDhikrMode  = ref('sugro');  // 'sugro' | 'kubro'
+const searchQuery      = ref('');
 
 // ── Audio Recitation Player State ──────────────────────────────────────────────
 const audioPlayerRef  = ref(null);
@@ -37,239 +38,419 @@ const handleAudioEnded = () => {
   isAudioPlaying.value = false;
 };
 
-// ── Curated Dhikr Data (Wazifah Sugra Lengkap) ──────────────────────────────────
+// ── Scraped Dhikr Data (Al-Ma'tsurat Sugro & Kubro Dari almatsurat.com) ─────────
 const dhikrs = ref([
   {
     id: 1,
-    title: 'Ta\'awwudh Khusus (Perlindungan Awal)',
-    arabic: 'أَعُوذُ بِاللَّهِ السَّمِيعِ الْعَلِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
-    latin: 'A\'udzu billahis-sami\'il-\'alimi minash-shaytanir-rajim.',
-    translation: 'Aku berlindung kepada Allah Yang Maha Mendengar lagi Maha Mengetahui dari godaan syaitan yang terkutuk.',
-    target: 3,
-    count: 0,
-    fadilah: 'Melindungi pembacanya dari gangguan bisikan syetan sejak awal memulai dzikir.'
+    title: 'Ta\'awudz',
+    arabic: 'اَعُوْذُ بِاللّٰهِ السَّمِيْعِ الْعَلِيْمِ مِنَ الشَّيْطَانِ الرَّجِيْمِ',
+    latin: 'A’uudzubillahissami’il aliimi minasyaithanirrajiim',
+    translation: 'Aku berlindung kepada Allah Yang Maha Mendengar lagi Maha Mengetahui dari godaan setan yang terkutuk.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: true,
+    fadilah: 'Mendapatkan perlindungan langsung dari Allah SWT dari segala tipu daya dan godaan setan yang menyesatkan.'
   },
   {
     id: 2,
-    title: 'Surah Al-Fatihah (Pembuka)',
-    arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ۝ الْحَمْدُ Lِلَّهِ رَبِّ الْعَالَمِينَ ۝ الرَّحْمَٰنِ الرَّحِيمِ ۝ مَالِكِ يَوْمِ الدِّينِ ۝ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ۝ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
-    latin: 'Bismillahir-rahmanir-rahim. Al-hamdu lillahi rabbil-\'alamin. Ar-rahmanir-rahim. Maliki yawmid-din. Iyyaka na\'budu wa iyyaka nasta\'in. Ihdinas-siratal-mustaqim. Siratal-ladhina an\'amta \'alayhim ghayril-maghdubi \'alayhim walad-dallin.',
-    translation: 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan seluruh alam. Yang Maha Pengasih, Maha Penyayang. Pemilik hari pembalasan. Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami memohon pertolongan. Tunjukilah kami jalan yang lurus. (yaitu) jalan orang-orang yang telah Engkau beri nikmat kepadanya; bukan (jalan) mereka yang dimurkai, dan bukan (pula jalan) mereka yang sesat.',
-    target: 1,
-    count: 0,
-    fadilah: 'Sebagai penawar segala racun dan penyakit hati, serta rukun utama dalam bermunajat.'
+    title: 'QS. Al-Fatihah : 1-7',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ اَلْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَۙ ۝ الرَّحْمٰنِ الرَّحِيْمِۙ ۝ مٰلِكِ يَوْمِ الدِّيْنِۗ ۝ اِيَّاكَ نَعْبُدُ وَاِيَّاكَ نَسْتَعِيْنُۗ ۝ اِهْدِنَا الصِّرَاطَ الْمُسْتَقِيْمَۙ ۝ صِرَاطَ الَّذِيْنَ اَنْعَمْتَ عَلَيْهِمْ ەۙ غَيْرِ الْمَغْضُوْبِ عَلَيْهِمْ وَلَا الضَّاۤلِّيْنَ ࣖ',
+    latin: 'Bismillaahirrahmaanirrahiiim ۝ Alhamdulillaahi rabbil \'alamin ۝ Arrahmaanirrahiim ۝ Maaliki yaumid-diin ۝ Iyyaaka na\'budu wa iyyaaka nasta\'iin ۝ Ihdinash-shiraathal mustaqiim ۝ Shiraathal-ladziina an\'amta \'alaihim, ghairil-maghdhuubi\'laihim waladh-dhaaaaliin.',
+    translation: 'Dengan menyebut nama Allah yang Maha Pemurah lagi Maha Penyayang ۝ Segala puji bagi Allah, Tuhan semesta alam ۝ Maha Pemurah lagi Maha Penyayang ۝ Yang menguasai di hari Pembalasan ۝ Hanya Engkaulah yang Kami sembah, dan hanya kepada Engkaulah Kami meminta pertolongan ۝ Tunjukilah Kami jalan yang lurus, ۝ (yaitu) jalan orang-orang yang telah Engkau beri nikmat kepada mereka; bukan (jalan) mereka yang dimurkai dan bukan (pula jalan) mereka yang sesat. Semoga Allah mengabulkan.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: true,
+    fadilah: 'Disebut sebagai \'Induk Al-Quran\' (Ummul Kitab). Menjadi rukun shalat, doa yang paling sempurna, sekaligus penyembuh (Ruqyah) dari berbagai penyakit.'
   },
   {
     id: 3,
-    title: 'Surah Al-Baqarah (Ayat 1-5)',
-    arabic: 'الم ۝ ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ ۝ الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنفِقُونَ ۝ وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنزِلَ إِلَيْكَ وَمَا أُنزِلَ مِن قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ ۝ أُولَٰئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ ۖ وَأُولَٰئِكَ هُمُ الْمُفْلِحُونَ',
-    latin: 'Alif-lam-mim. Dzalikal-kitabu la rayba fih, hudan lil-muttaqin. Al-ladhina yu\'minuna bil-ghaybi wa yuqimunas-salata wa mimma razaqnahum yunfiqun. Wal-ladhina yu\'minuna bima unzila ilayka wa ma unzila min qablik, wa bil-akhirati hum yuqinun. Ula\'ika \'ala hudam mir rabbihim wa ula\'ika humul-muflihun.',
-    translation: 'Alif Lam Mim. Kitab (Al-Quran) ini tidak ada keraguan padanya; petunjuk bagi mereka yang bertakwa. (yaitu) mereka yang beriman kepada yang ghaib, yang mendirikan shalat, dan menafkahkan sebagian rezeki yang Kami anugerahkan kepada mereka. Dan mereka yang beriman kepada Kitab (Al-Quran) yang telah diturunkan kepadamu dan Kitab-kitab yang telah diturunkan sebelummu, serta mereka yakin akan adanya (kehidupan) akhirat. Mereka itulah yang tetap mendapat petunjuk dari Tuhannya, dan merekalah orang-orang yang beruntung.',
-    target: 1,
-    count: 0,
-    fadilah: 'Syaitan tidak akan sanggup memasuki atau mendekati rumah yang dibacakan ayat-ayat ini.'
+    title: 'QS. Al-Baqarah : 1-5',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ الۤمّۤ ۚ ۝ ذٰلِكَ الْكِتٰبُ لَا رَيْبَ ۛ فِيْهِ ۛ هُدًى لِّلْمُتَّقِيْنَۙ ۝ الَّذِيْنَ يُؤْمِنُوْنَ بِالْغَيْبِ وَيُقِيْمُوْنَ الصَّلٰوةَ وَمِمَّا رَزَقْنٰهُمْ يُنْفِقُوْنَ ۙ ۝ وَالَّذِيْنَ يُؤْمِنُوْنَ بِمَآ اُنْزِلَ اِلَيْكَ وَمَآ اُنْزِلَ مِنْ قَبْلِكَ ۚ وَبِالْاٰخِرَةِ هُمْ يُوْقِنُوْنَۗ۝ اُولٰۤىِٕكَ عَلٰى هُدًى مِّنْ رَّبِّهِمْ ۙ وَاُولٰۤىِٕكَ هُمُ الْمُفْلِحُوْنَ ۝',
+    latin: 'Bismillaahirrahmaanirrahiiim. ۝ Alif laam miim. ۝ Dzaalikal–kitaabu laa raiba fiihi hudal lil-muttaqiin. ۝ Alladziina yu\'minuuna bil ghaibi wa yuqiimuunash-shalaata wa mimmaa razaqnaa-hum yunfiquuun. ۝ Wal-ladziina yu\'minuuna bimaa unzila ilaika wa maa unzila min qablik, wa bil aakhirati hum yuuqinuuun. ۝ Ulaa-ika \'alaa hudammir rabbihim wa ulaa-ika humul muflihuun.',
+    translation: 'Alif laam miim. ۝ Kitab (Al Quran) ini tidak ada keraguan padanya; petunjuk bagi mereka yang bertaqwa, ۝ (yaitu) mereka yang beriman kepada yang ghaib, yang mendirikan shalat, dan menafkahkan sebahagian rezki yang Kami anugerahkan kepada mereka. ۝ Dan mereka yang beriman kepada kitab (Al Quran) yang telah diturunkan kepadamu dan Kitab-Kitab yang telah diturunkan sebelummu, serta mereka yakin akan adanya (kehidupan) akhirat. ۝ Mereka Itulah yang tetap mendapat petunjuk dari Tuhan mereka, dan merekalah orangorang yang beruntung.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: true,
+    fadilah: 'Mendapatkan petunjuk hidup yang lurus dan dijanjikan akan termasuk ke dalam golongan orang-orang yang beruntung di dunia dan akhirat.'
   },
   {
     id: 4,
-    title: 'Ayat Kursi (Surah Al-Baqarah Ayat 255)',
-    arabic: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ hِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',
-    latin: 'Allahu la ilaha illa huwal-hayyul-qayyum, la ta\'khudhuhu sinatuw-wa la nawm, lahu ma fis-samawati wa ma fil-ardh, man dhal-ladhi yashfa\'u \'indahu illa bi-idhnih, ya\'lamu ma bayna aydihim wa ma khalfahum, wa la yuhituna bi-shay\'im min \'ilmihi illa bima sha\', wasi\'a kursiyyuhus-samawati wal-ardh, wa la ya\'uduhu hifzhuhuma, wa huwal-\'aliyyul-\'azhim.',
-    translation: 'Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus-menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur. Kepunyaan-Nya apa yang di langit dan di bumi. Tiada yang dapat memberi syafa\'at di sisi Allah tanpa izin-Nya? Allah mengetahui apa-apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak mengetahui apa-apa dari ilmu Allah melainkan apa yang dikehendaki-Nya. Kursi Allah meliputi langit dan bumi. Dan Allah tidak merasa berat memelihara keduanya, dan Allah Maha Tinggi lagi Maha Besar.',
-    target: 1,
-    count: 0,
-    fadilah: 'Allah senantiasa mengirimkan malaikat penjaga, menghindari kejahatan jin/syaitan sepanjang hari.'
+    title: 'Ayat Kursi (QS. Al-Baqarah : 255)',
+    arabic: 'اَللّٰهُ لَآ اِلٰهَ اِلَّا هُوَۚ اَلْحَيُّ الْقَيُّوْمُ ەۚ لَا تَأْخُذُهٗ سِنَةٌ وَّلَا نَوْمٌۗ لَهٗ مَا فِى السَّمٰوٰتِ وَمَا فِى الْاَرْضِۗ مَنْ ذَا الَّذِيْ يَشْفَعُ عِنْدَهٗٓ اِلَّا بِاِذْنِهٖۗ يَعْلَمُ مَا بَيْنَ اَيْدِيْهِمْ وَمَا خَلْفَهُمْۚ وَلَا يُحِيْطُونَ بِشَيْءٍ مِّنْ عِلْمِهٖٓ اِلَّا بِمَا شَاۤءَۚ وَسِعَ كُرْسِيُّهُ السَّمٰوٰtِ وَالْاَرْضَۚ وَلَا يَـُٔوْدُهٗ حِفْظُهُمَاۚ وَهُوَ الْعَلِيُّ الْعَظِيْمُ',
+    latin: 'Allahu laa ilaaha illaa huwal hayyul qayyuum, laa ta\'khudzuhuu sinatuwwa laa nauum, lahuu maa fissamaawaati wa maa fil ardhi, mandzalladzii yasyfa\'u indahuu ilaa bi idznih, ya\'lamu maa baina aidiihim wa maa khalfahum wa laa yuhiithuuuna bi syai\'im-min \'ilmihii illaa bima syaa-a wasi\'a kursiyyuhus-samaawaati wal-ardha, wa laa ya\'uuduhuu hifzhuhumaa wa huwal \'aliyyul-\'azhiim.',
+    translation: 'Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia yang hidup kekal lagi terus menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur. Kepunyaan-Nya apa yang di langit dan di bumi. tiada yang dapat memberi syafa\'at di sisi Allah tanpa izin-Nya? Allah mengetahui apa-apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak mengetahui apa-apa dari ilmu Allah melainkan apa yang mengehendaki-Nya. Kursi Allah meliputi langit dan bumi. dan Allah tidak merasa berat memelihara keduanya, dan Allah Maha Tinggi lagi Maha besar.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: true,
+    fadilah: 'Barangsiapa membacanya di pagi hari, maka ia akan senantiasa dijaga oleh Allah dari gangguan setan hingga petang hari.'
   },
   {
     id: 5,
-    title: 'Surah Al-Baqarah (Ayat 256-257)',
-    arabic: 'لَا إِكْرَاهَ فِي الدِّينِ ۖ قَد تَّبَيَّنَ الرُّشْدُ مِنَ الْغَيِّ ۚ فَمَن يَكْفُرْ بِالطَّاغُوتِ وَيُؤْمِن بِاللَّهِ فَقَدِ اسْتَمْسَكَ بِالْعُرْوَةِ الْوُثْقَىٰ لَا انفِصَامَ لَهَا ۗ وَاللَّهُ سَمِيعٌ عَلِيمٌ ۝ اللَّهُ وَلِيُّ الَّذِينَ آمَنُوا يُخْرِجُهُم مِّنَ الظُّلُمَاتِ إِلَى النُّورِ ۖ وَالَّذِينَ كَفَرُوا أَوْلِيَاؤُهُمُ الطَّاغُوتُ يُخْرِجُونَهُم مِّنَ النُّورِ إِلَى الظُّلُمَاتِ ۗ أُولَٰئِكَ أَصْحَابُ النَّارِ ۖ هُمْ فِيهَا خَالِدُونَ',
-    latin: 'La ikraha fid-dini qad tabayyanar-rushdu minal-ghayy. Faman yakfur bit-taghuti wa yu\'min billahi faqadistamsaka bil-\'urwatil-wuthqa lanfisama laha. Wallahu sami\'un \'alim. Allahu waliyyul-ladhina amanu yukhrijuhum minadh-dhulumati ilan-nur. Wal-ladhina kafaru awliya\'uhumut-taghutu yukhrijunahum minan-nuri iladh-dhulumat. Ula\'ika as-habun-nari hum fiha khalidun.',
-    translation: 'Tidak ada paksaan dalam menganut agama (Islam), sesungguhnya telah jelas perbedaan antara jalan yang benar dengan jalan yang sesat. Barangsiapa ingkar kepada Thaghut dan beriman kepada Allah, maka sungguh dia telah berpegang pada tali yang sangat kuat yang tidak akan putus. Allah Maha Mendengar, Maha Mengetahui. Allah pelindung orang-orang yang beriman. Dia mengeluarkan mereka dari kegelapan kepada cahaya. Dan orang-orang yang kafir, pelindung-pelindungnya adalah Thaghut, yang mengeluarkan mereka dari cahaya kepada kegelapan. Mereka adalah penghuni neraka, mereka kekal di dalamnya.',
-    target: 1,
-    count: 0,
-    fadilah: 'Memperteguh iman tauhid dan mengingatkan jaminan Allah untuk menolong orang beriman.'
+    title: 'QS. Al-Baqarah : 256 - 257 (Ayat Kursi Sambungan)',
+    arabic: 'لَآ اِكْرَاهَ فِى الدِّيْنِۗ قَدْ تَّبَيَّنَ الرُّشْدُ مِنَ الْغَيِّ ۚ فَمَنْ يَّكْفُرْ بِالطَّاغُوْتِ وَيُؤْمِنْۢ بِاللّٰهِ فَقَدِ اسْتَمْسَكَ بِالْعُرْوَةِ الْوُثْقٰى لَا انْفِصَامَ لَهَا ۗوَاللّٰهُ سَمِيْعٌ عَلِيْمٌ ۝ اَللّٰهُ وَلِيُّ الَّذِيْنَ اٰمَنُوْا يُخْرِجُهُمْ مِّنَ الظُّلُمٰتِ اِلَى النُّوْرِۗ وَالَّذِيْنَ كَفَرُوْٓا اَوْلِيَاۤؤُهُمُ الطَّاغُوْتُ يُخْرِجُوْنَهُمْ مِّنَ النُّوْرِ اِلَى الظُّلُمٰتِۗ اُولٰۤىِٕكَ اَصْحٰبُ النَّارِۚ هُمْ فِيْهَا خٰلِدُوْنَ',
+    latin: 'Laa ikraaha fiddīni, qattabayyanarrusydu minal gayyi, famayyakfur bith-thaaaguuti wa yu\'mim billaahi fa qadistamsaka bil ‘urwatil wutsqaa, lanfishaama lahaa, wallaahu samii‘un ‘aliimun. ۝ Allaahu waliyyulladziina aamanuu yukhrijuhum minazh-zhulumaati ilannuuri, walladziina kafaruu auliyaa \'uhumuth-thaaguutu yukhrijuhum minannuri ilazh-zhulumaati, ulaa \'ika ash-haabunnaari, hum fīhaa khaaliduuna.',
+    translation: 'Tidak ada paksaan dalam (menganut) agama (Islam), sesungguhnya telah jelas (perbedaan) antara jalan yang benar dengan jalan yang sesat. Barang siapa ingkar kepada Tagut dan beriman kepada Allah, maka sungguh, dia telah berpegang (teguh) pada tali yang sangat kuat yang tidak akan putus. Allah Maha Mendengar, Maha Mengetahui. ۝ Allah pelindung orang yang beriman. Dia mengeluarkan mereka dari kegelapan kepada cahaya (iman). Dan orang-orang yang kafir, pelindung-pelindungnya adalah setan, yang mengeluarkan mereka dari cahaya kepada kegelapan. Mereka adalah penghuni neraka. Mereka kekal di dalamnya.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Memantapkan ketauhidan dan melepaskan keterikatan dari segala perisai thaghut.'
   },
   {
     id: 6,
-    title: 'Surah Al-Baqarah (Ayat 284-286)',
-    arabic: 'لِّلَّهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ وَإِن تُبْدُوا مَا فِي أَنفُسِكُمْ أَوْ تُخْفُوهُ يُحَاسِبْكُم بِهِ اللَّهُ ۖ فَيَغْفِرُ لِمَن يَشَاءُ وَيُعَذِّبُ مَن يَشَاءُ ۗ وَاللَّهُ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ ۝ آمَنَ الرَّسُولُ بِمَا أُنزِلَ إِلَيْهِ مِن رَّبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُtُبِهِ وَرُسُلِهِ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِّن رُwسُلِهِ ۚ وَقَالُوا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيرُ ۝ لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِكَ ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا ۚ أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ',
-    latin: 'Lillahi ma fis-samawati wa ma fil-ardh. Wa in tubdu ma fi anfusikum aw tukhfuhu yuhasibkum bihilla. Fa-yaghfiru limay-yasha\'u wa yu\'adhibu may-yasha\', wallahu \'ala kulli shay\'in qadir. Amanar-rasulu bima unzila ilayhi mir-rabbihi wal-mu\'minun. Kullun amana billahi wa mala\'ikatihi wa kutubihi wa rusulih, la nufarriqu bayna ahadim-mir-rusulih. Wa qalu sami\'na wa ata\'na ghufranaka rabbana wa ilaykal-masir. La yukallifullahu nafsan illa wus\'aha, laha ma kasabat wa \'alayha maktasabat. Rabbana la tu\'akhidhna in-nasina aw akhta\'na. Rabbana wala tahmil \'alayna isran kama hamaltahu \'alal-ladhina min qablik. Rabbana wala tuhammilna ma la taqata lana bih. Wa\'fu \'anna waghfir lana warhamna. Anta mawlana fansurna \'alal-qawmil-kafirin.',
-    translation: 'Kepunyaan Allah-lah segala apa yang ada di langit dan di bumi. Dan jika kamu melahirkan apa yang ada di dalam hatimu atau kamu menyembunyikannya, niscaya Allah akan membuat perhitungan dengan kamu tentang perbuatanmu itu... Rasul telah beriman kepada Al-Quran yang diturunkan kepadanya dari Tuhannya, demikian pula orang-orang yang beriman... Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya...',
-    target: 1,
-    count: 0,
-    fadilah: 'Diberikan perlindungan dan kecukupan dari segala keburukan sepanjang hari/malam.'
+    title: 'QS. Al-Baqarah : 284-286',
+    arabic: 'لِلّٰهِ مَا فِى السَّمٰوٰتِ وَمَا فِى الْاَرْضِ ۗ وَاِنْ تُبْدُوْا مَا فِيْٓ اَنْفُسِكُمْ اَوْ تُخْفُوْهُ يُحَاسِبْكُمْ بِهِ اللّٰهُ ۗ فَيَغْفِرُ Lِمَنْ يَّشَاۤءُ وَيُعَذِّبُ مَنْ يَّشَاۤءُ ۗ وَاللّٰهُ عَلٰى كُلِّ شَيْءٍ قَدِيْرٌ ۝ اٰمَنَ الرَّسُوْلُ بِمَآ اُنْZِلَ اِلَيْهِ مِنْ رَّبِّهٖ وَالْمُؤْمِنُوْنَۗ كُلٌّ اٰمَنَ بِاللّٰهِ وَمَلٰۤىِٕكَتِهٖ وَكُتُبِهٖ وَرُسُلِهٖۗ لَا نُفَرِّقُ بَيْنَ اَحَدٍ مِّنْ رُّسُلِهٖ ۗ وَقَالُوْا سَمِعْنَا وَاَطَعْنَا غُفْرَانَكَ رَبَّنَا وَاِلَيْكَ الْمَصِيْرُ ۝ لَا يُكَلِّفُ اللّٰهُ نَفْسًا اِلَّا وُسْعَهَا ۗ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَآ اِنْ نَّسِيْنَآ اَوْ اَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَآ اِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِيْنَ مِنْ قَبْلِكَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ Lَنَا بِهٖۚ وَاعْفُ عَنَّاۗ وَاغْفِرْ Lَنَاۗ وَارْحَمْنَا ۗ اَنْتَ مَوْلٰىنَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكٰفِرِيْنَ ۝',
+    latin: 'Lillaahi maa fis-samaawaati wa maa fil-ardhi, Wa in tubduu maa fii anfusikum autukh-fuuhu yuhaasibkum bihilaah, Fayaghfiru limayyasyaa-u wa yu\'dzidzibu mayyasyaa\', wallahu \'alaa kulli syai\'in qadiir. ۝ Aamanarrasuulu bimaa unzila ilaihi mirrabbihii wal mu\'minuun. Kullun aamana billahi wa malaa\'ikatihii wa kutubihii wa rusulih, laa nufarriqu baina ahadim mirrusulih. Wa qaaluu sami\'naa wa atha\'naa ghufraanaka rabbanaa wa ilaikal mashiir. ۝ Laa yukallifullaahu nafsan illaa wus\'ahaa, lahaa maa kasabat wa\'alaihaa maktasabat, Rabbanaa laa tu-aakhidznaa innasiinaa auakhtha\'naa, rabbanaa wa laa tahmil \'alainaa ishran kamaa hamaltahuu \'alalladziinaa min qablinaa, rabbanaa wa laa tuhammilna maa laa thaaqata lanaa bihi wa\'fu \'annaa waghfirlanaa warhamnaa anta maulanaa fanshurnaa \'alal qaumil kaafiriin.',
+    translation: 'Kepunyaan Allah-lah segala apa yang ada di langit dan apa yang ada di bumi. dan jika kamu melahirkan apa yang ada di dalam hatimu atau kamu menyembunyikan, niscaya Allah akan membuat perhitungan dengan kamu tentang perbuatanmu itu... Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: true,
+    fadilah: 'Barangsiapa membaca dua ayat terakhir surah Al-Baqarah pada malam/hari itu, niscaya Allah akan mencukupkan segala kebutuhannya.'
   },
   {
     id: 7,
-    title: 'Surah Ali Imran (Ayat 1-2)',
-    arabic: 'الم ۝ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ',
-    latin: 'Alif-laam-miim. Allahu la ilaha illa huwal-hayyul-qayyum.',
-    translation: 'Alif Lam Mim. Allah, tidak ada Tuhan (yang berhak disembah) selain Dia. Yang Maha Hidup, Yang terus-menerus mengurus (makhluk-Nya).',
-    target: 1,
-    count: 0,
-    fadilah: 'Merupakan penegasan tauhid yang agung bersumber langsung dari Al-Quran.'
+    title: 'QS. Ali Imran : 1-2',
+    arabic: 'الۤمّۤ ۝ اَللّٰهُ لَآ اِلٰهَ اِلَّا هُوَ الْحَيُّ الْقَيُّوْمُۗ ۝',
+    latin: 'Alif Lam Mim. ۝ Allaahu laa ilaaha illaa huwal ḥayyul qayyuumu.',
+    translation: 'Alif Lam Mim. ۝ Allah, tidak ada tuhan selain Dia. Yang Mahahidup, Yang terus-menerus mengurus (makhluk-Nya).',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Mengandung Ismullah al-A\'zham (Nama Allah yang paling agung) di mana jika dipanjatkan doa dengannya niscaya dikabulkan.'
   },
   {
     id: 8,
-    title: 'Surah Al-Ikhlas',
-    arabic: 'قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ',
-    latin: 'Qul huwallahu ahad. Allahus-samad. Lam yalid wa lam yulad. Wa lam yakul lahu kufuwan ahad.',
-    translation: 'Katakanlah: Dialah Allah, Yang Maha Esa. Allah adalah Tuhan yang bergantung kepada-Nya segala sesuatu. Dia tiada beranak dan tidak pula diperanakkan, dan tidak ada seorang pun yang setara dengan Dia.',
-    target: 3,
-    count: 0,
-    fadilah: 'Menyamai pahala membaca sepertiga isi Al-Quran jika dibaca dengan ikhlas.'
+    title: 'QS. Thaha : 111-112',
+    arabic: 'وَعَنَتِ الْوُجُوْهُ لِلْحَيِّ الْقَيُّوْمِۗ وَقَدْ خَابَ مَنْ حَمَلَ ظُلْمًا ۝ وَمَنْ يَّعْمَلْ مِنَ الصّٰلِحٰتِ وَهُوَ مُؤْمِنٌ فَلَا يَخٰفُ ظُلْمًا وَّلَا هَضْمًا ۝',
+    latin: 'wa’anatil wujuuhu lilhayyil qayyuumi waqad khaaba man hamala zhulmaan. ۝ waman ya’mal mina ash-shaalihaati wahuwa mu\'minun falaa yakhaafu zhulman walaa hadhmaan.',
+    translation: 'Dan semua wajah tertunduk di hadapan (Allah) Yang Hidup dan Yang Berdiri Sendiri. Sungguh rugi orang yang melakukan kezaliman ۝ Dan barang siapa mengerjakan kebajikan sedang dia (dalam keadaan) beriman, maka dia tidak khawatir akan perlakuan zalim (terhadapnya) dan tidak (pula khawatir) akan pengurangan haknya.',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Menghadirkan rasa ketundukan di hadapan Allah yang Mahahidup dan Mahaberdiri Sendiri.'
   },
   {
     id: 9,
-    title: 'Surah Al-Falaq',
-    arabic: 'قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ',
-    latin: 'Qul a\'udhu bi rabbil-falaq. Min sharri ma khalaq. Wa min sharri ghasiqin idha waqab. Wa min sharri-naffathati fil-\'uqad. Wa min sharri hasidin idha hasad.',
-    translation: 'Katakanlah: Aku berlindung kepada Tuhan Yang Menguasai subuh, dari kejahatan makhluk-Nya, dan dari kejahatan malam apabila telah gelap gulita, dan dari kejahatan wanita-wanita penyihir yang meniup pada buhul-buhul, dan dari kejahatan pendengki bila ia dengki.',
-    target: 3,
-    count: 0,
-    fadilah: 'Perlindungan terbaik terhadap sihir, hasad dengki, serta makhluk jahat di malam hari.'
+    title: 'QS. At-Taubah : 129',
+    arabic: 'فَإِن تَوَلَّوْا فَقُلْ حَسْبِىَ ٱللَّهُ لَآ إِلَـٰهَ إِلَّا هُوَ ۖ عَلَيْهِ تَوَكَّلْتُ ۖ وَهُوَ رَبُّ ٱلْعَرْشِ ٱلْعَظِيمِ۝',
+    latin: 'Fa in tawallaw fa qul ḥasbiyallāhu lā ilāha illā huw, \'alaihi tawakkalt, wa huwa rabbul-\'arsyil-\'aẓīm.',
+    translation: 'Jika mereka berpaling (dari keimanan), maka katakanlah: \'Cukuplah Allah bagiku; tidak ada Tuhan selain Dia. Hanya kepada-Nya aku bertawakkal dan Dia adalah Tuhan yang memiliki \'Arsy yang agung',
+    sugraTarget: 7,
+    kubraTarget: 7,
+    isSugra: true,
+    fadilah: 'Dicukupi segala perkara urusan dunianya maupun urusan akhiratnya.'
   },
   {
     id: 10,
-    title: 'Surah An-Nas',
-    arabic: 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ',
-    latin: 'Qul a\'udhu bi rabbin-nas. Malikin-nas. Ilahin-nas. Min sharril-waswasil-khannas. Al-ladhi yuwaswisu fi sudurin-nas. Minal-jinnati wan-nas.',
-    translation: 'Katakanlah: Aku berlindung kepada Tuhan (yang memelihara dan menguasai) manusia. Raja manusia. Sembahan manusia. Dari kejahatan (bisikan) syaitan yang biasa bersembunyi, yang membisikkan (kejahatan) ke dalam dada manusia, dari (golongan) jin dan manusia.',
-    target: 3,
-    count: 0,
-    fadilah: 'Melindungi jiwa dari bisikan jahat syaitan dari golongan jin maupun manusia.'
+    title: 'QS. Al-Isra’ : 110 – 111',
+    arabic: 'قُلِ ادْعُوا اللّٰهَ اَوِ ادْعُوا الرَّحْمٰنَۗ اَيًّا مَّا تَدْعُوْا فَلَهُ الْاَسْمَاۤءُ الْحُسْنٰىۚ وَلَا تَجْهَرْ بِصَلَاتِكَ وَلَا تُخَافِتْ بِهَا وَابْتَغِ بَيْنَ ذٰلِكَ سَبِيْلًا ۝ وَقُلِ الْحَمْدُ Lِلّٰهِ الَّذِيْ لَمْ يَتَّخِذْ وَلَدًا وَّلَمْ يَكُنْ Lَّهٗ شَرِيْكٌ فِى الْمُلْكِ وَلَمْ يَكُنْ Lَّهٗ وَلِيٌّ مِّنَ الذُّلِّ وَكَبِّرْهُ تَكْبِيْرًا ۝',
+    latin: 'Qulid‘ullaaha awid‘ur-rahmaana, ayyam maa tad‘uu falahul asmaa\'ul husna, wa laa tajhar bishalaatika wa laa tukhaafit bihaa wabtaghi baina dzaalika sabiilan ۝ Wa qulilḥamdu lillaahil-ladzii lam yattakhid waladawwa lam yakul-lahuu syariikun fil-mulki walam yakul-lahuu waliyyumminadz-dzulli wa kabbirhu takbiiran.',
+    translation: 'Katakanlah: “Serulah Allah atau serulah Ar-Rahman. Dengan nama yang mana saja kamu seru, Dia mempunyai al asmaaul husna... Dan katakanlah: “Segala puji bagi Allah Yang tidak mempunyai anak...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Dilepaskan dari kehinaan lahir batin dan mengagungkan Allah sebesar-besarnya.'
   },
   {
     id: 11,
-    title: 'Dzikir Keadaan Waktu (Pagi / Petang)',
-    isTimeDependent: true,
-    // Morning
-    morningArabic: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ. رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَٰذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَٰذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ',
-    morningLatin: 'Asbahna wa asbahal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa huwa \'ala kulli shay\'in qadir. Rabbi as\'aluka khayra ma fi hadhal-yawmi wa khayra ma ba\'dah, wa a\'udhu bika min sharri ma fi hadhal-yawmi wa sharri ma ba\'dah. Rabbi a\'udhu bika minal-kasali wa su\'il-kibar, rabbi a\'udhu bika min \'adhabin fin-nari wa \'adhabin fil-qabr.',
-    morningTranslation: 'Kami memasuki waktu pagi dan segala kekuasaan milik Allah, segala puji bagi Allah. Tiada Tuhan selain Allah Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kekuasaan dan pujian, dan Dia Maha Kuasa atas segala sesuatu. Ya Tuhanku, aku mohon kebaikan hari ini dan kebaikan sesudahnya, dan berlindung dari kejahatan hari ini dan kejahatan sesudahnya. Ya Tuhanku, aku berlindung dari malas dan keburukan masa tua, serta azab neraka dan kubur.',
-    // Evening
-    eveningArabic: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ. رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَٰذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَٰذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ',
-    eveningLatin: 'Amsayna wa amsal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa huwa \'ala kulli shay\'in qadir. Rabbi as\'aluka khayra ma fi hadhihil-laylati wa khayra ma ba\'daha, wa a\'udhu bika min sharri ma fi hadhihil-laylati wa sharri ma ba\'daha. Rabbi a\'udhu bika minal-kasali wa su\'il-kibar, rabbi a\'udhu bika min \'adhabin fin-nari wa \'adhabin fil-qabr.',
-    eveningTranslation: 'Kami memasuki waktu petang dan segala kekuasaan milik Allah, segala puji bagi Allah. Tiada Tuhan selain Allah Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kekuasaan dan pujian, dan Dia Maha Kuasa atas segala sesuatu. Ya Tuhanku, aku mohon kebaikan malam ini dan kebaikan sesudahnya, dan berlindung dari kejahatan malam ini dan kejahatan sesudahnya. Ya Tuhanku, aku berlindung dari malas dan keburukan masa tua, serta azab neraka dan kubur.',
-    target: 1,
-    count: 0,
-    fadilah: 'Menyerahkan perlindungan diri dan memohon kebaikan hari/malam ini kepada Allah.'
+    title: 'QS. Al-Mu’minun : 115 – 118',
+    arabic: 'اَفَحَسِبْتُمْ اَنَّمَا خَلَقْنٰكُمْ عَبَثًا وَاَنَّكُمْ اِلَيْنَا لَا تُرْجَعُوْنَ ۝ فَتَعٰلَى اللّٰهُ الْمَلِكُ الْحَقُّۚ لَآ اِلٰهَ اِلَّا هُوَۚ رَبُّ الْعَرْشِ الْكَرِيْمِ ۝ وَمَنْ يَّدْعُ مَعَ اللّٰهِ اِلٰهًا اٰخَرَۙ لَا بُرْهَانَ لَهٗ بِهٖۙ فَاِنَّمَا حِسَابُهٗ عِنْدَ رَبِّهٖۗ اِنَّهٗ لَا يُفْلِحُ الْكٰفِرُوْنَ ۝ وَقُلْ رَّبِّ اغْفِرْ وَارْحَمْ وَاَنْتَ خَيْرُ الرّٰحِمِيْنَ ۝',
+    latin: 'afahasibtum annamaa khalaqnaakum ‘abatsan wa-annakum ilainaa laa turja’uuna ۝ fata’aalaa allaahul malikulhaqqu laa ilaaha illaa huwa rabbul ’arsyilkariimi ۝ waman yad’u ma’aallaahi ilaahan aakhara laa burhaana lahu bihi fa-innamaa hisaabuhu ‘inda rabbihi innahu laa yuflihul kaafiruuna ۝ waqurrabbighfir warham wa-anta khairurraahimiina.',
+    translation: 'Maka apakah kamu mengira, bahwa Kami menciptakan kamu main-main (tanpa ada maksud) dan bahwa kamu tidak akan dikembalikan kepada Kami? ۝ Maka Mahatinggi Allah, Raja yang sebenarnya...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Mengingatkan orientasi pertanggungjawaban akhir hidup manusia dan kedahsyatan penciptaan.'
   },
   {
     id: 12,
-    title: 'Dzikir Pengakuan Nikmat (Pagi / Petang)',
-    isTimeDependent: true,
-    // Morning
-    morningArabic: 'اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ، فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
-    morningLatin: 'Allahumma ma ashbaha bi min ni\'matin aw bi-ahadim min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr.',
-    morningTranslation: 'Ya Allah, nikmat yang kuterima di pagi ini atau yang diterima oleh salah seorang dari makhluk-Mu adalah dari-Mu semata, tiada sekutu bagi-Mu. Bagi-Mu segala puji dan syukur.',
-    // Evening
-    eveningArabic: 'اللَّهُمَّ مَا أَمْسَىٰ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ، فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
-    eveningLatin: 'Allahumma ma amsa bi min ni\'matin aw bi-ahadim min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr.',
-    eveningTranslation: 'Ya Allah, nikmat yang kuterima di petang ini atau yang diterima oleh salah seorang dari makhluk-Mu adalah dari-Mu semata, tiada sekutu bagi-Mu. Bagi-Mu segala puji dan syukur.',
-    target: 1,
-    count: 0,
-    fadilah: 'Barangsiapa membacanya di pagi/petang hari, ia telah menunaikan rasa syukurnya pada hari/malam itu.'
+    title: 'QS. Ar-Rum : 17 – 26',
+    arabic: 'فَسُبْحٰنَ اللّٰهِ حِيْنَ تُمْسُوْنَ وَحِيْنَ تُصْبِحُوْنَ ۝ وَلَهُ الْحَمْدُ فِى السَّمٰوٰتِ وَالْاَرْضِ وَعَشِيًّا وَّحِيْنَ تُظْهِرُوْنَ ۝ يُخْرِجُ الْحَيَّ مِنَ الْمَيِّتِ وَيُخْرِجُ الْمَيِّتَ مِنَ الْحَيِّ وَيُحْيِ الْاَرْضَ بَعْدَ مَوْتِهَا ۗوَكَذٰلِكَ تُخْرَجُوْنَ ۝ وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَكُمْ مِّنْ تُرَابٍ ثُمَّ اِذَآ اَنْتُمْ بَشَرٌ تَنْتَشِرُوْنَ ۝ وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً ۗاِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ لِّقَوْمٍ يَّتَفَكَّرُوْنَ ۝ وَمِنْ اٰيٰتِهٖ خَلْقُ السَّمٰوٰتِ وَالْاَرْضِ وَاخْتِلَافُ اَلْسِنَتِكُمْ وَاَلْوَانِكُمْۗ اِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ لِّلْعٰلِمِيْنَ ۝ وَمِنْ اٰيٰتِهٖ مَنَامُكُمْ بِالَّيْلِ وَالنَّهَارِ وَابْتِغَاۤؤُكُمْ مِّnْ فَضْلِهٖۗ اِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ لِّقَوْمٍ يَّسْمَعُوْنَ ۝ وَمِنْ اٰيٰتِهٖ يُرِيْكُمُ الْبَرْقَ خَوْفًا وَّطَمَعًا وَّيُنَزِّلُ مِنَ السَّمَاۤءِ مَاۤءً فَيُحْيٖ بِهِ الْاَرْضَ بَعْدَ مَوْتِهَاۗ اِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ Lِّقَوْمٍ yَّعْقِلُوْنَ ۝ وَمِنْ اٰيٰتِهٖٓ اَنْ تَقُوْمَ السَّمَاۤءُ وَالْاَرْضُ بِاَمْرِهٖۗ ثُمَّ اِذَا دَعَاكُمْ دَعْوَةًۖ مِّنَ الْاَرْضِ اِذَآ اَنْتُمْ تَخْرُجُوْنَ ۝ وَلَهٗ مَنْ فِى السَّمٰوٰتِ وَالْاَرْضِۗ كُلٌّ لَّهٗ قَانِتُوْنَ ۝',
+    latin: 'fasubhaanaallaahi hiina tumsuuna wahiina tushbihuuna. ۝ walahulhamdu fiissamaawaati wal-ardhi wa’asyiyyan wahiina tuzhhiruuna. ۝ yukhrijul hayya minalmayyiti wayukhrijul mayyita minal hayyi wayuhyiil ardha ba’da mautihaa wakadzaalika tukhrajuuna. ۝ wamin aayaatihi-an khalaqakum min turaabin tsumma idzaa antum basyarun tantasyiruuna. ۝ wamin aayaatihi-an khalaqa lakum min anfusikum azwaajan litaskunuu ilaihaa waja’ala bainakum mawaddatan warahmatan inna fii dzaalika laa-ayaatil-liqaumin yatafakkaruuna. ۝ wamin aayaatihi khalqussamaawaati wal ardhi wakhtilaaful sinatikum waalwaanikum inna fii dzaalika laaayaatin lil’aalimiina. ۝ wamin aayaatihi manaamukum billaili waannahaari wabtighaa-ukum min fadhlihi inna fii dzaalika laa ayaatil-liqaumin yasma’uuna. ۝ wamin aayaatihi yuriikumu albarqa khawfan wathama’an wayunazzilu mina alssamaa-i maa-an fayuhyii bihi al-ardha ba’da mautihaa inna fii dzaalika laa ayaatil-liqaumin ya’qiluuna. ۝ wamin aayaatihi an taquumassamaa-u waal-ardhu biamrihi tsumma idzaa da’aakum da’watan minaal ardhi idzaa antum takhrujuuna. ۝ walahu man fiissamaawaati waal-ardhu kullun lahu qaanituuna',
+    translation: 'Maka bertasbihlah kepada Allah di waktu kamu berada di petang hari dan waktu kamu berada di waktu subuh... Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan kamu dari tanah...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Tasbih alam semesta, memohon kelimpahan rizki siang-malam.'
   },
   {
     id: 13,
-    title: 'Dzikir Kesehatan & Keselamatan Panca Indra',
-    arabic: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَٰهَ إِلَّا أَنْتَ',
-    latin: 'Allahumma \'afini fi badani, Allahumma \'afini fi sam\'i, Allahumma \'afini fi basari, la ilaha illa ant.',
-    translation: 'Ya Allah, sehatkanlah badanku. Ya Allah, sehatkanlah pendengaranku. Ya Allah, sehatkanlah penglihatanku. Tiada Tuhan selain Engkau.',
-    target: 3,
-    count: 0,
-    fadilah: 'Memohon kesehatan jasmani serta perlindungan panca indra agar selalu digunakan untuk ketaatan.'
+    title: 'QS. Al-Mu’min (Ghafir) : 1 – 3',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ حٰمۤ ۚ ۝ تَنْزِيْلُ الْكِتٰبِ مِنَ اللّٰهِ الْعَزِيْزِ الْعَلِيْمِۙ ۝ غَافِرِ الذَّنْۢبِ وَقَابِلِ التَّوْبِ شَدِيْدِ الْعِقَابِ ذِى التَّوْلِۗ لَآ اِلٰهَ اِلَّا هُوَ ۗاِلَيْهِ الْمَصِيْرُ ۝',
+    latin: 'Bismillaahirrahmaanirrahiim ۝ haa-miim ۝ tanziilul kitaabi minaallaahil ’aziizil ’aliimi ۝ ghaafiridz-dzanbi waqaabilittaubi syadiidil’ iqaabi dziith-thauli laa ilaaha illaa huwa ilaihil mashiiru.',
+    translation: 'Dengan menyebut nama Allah Yang Pemurah lagi Maha Penyayang. ۝ Haa Miim. ۝ Diturunkan Kitab ini (Al Quran) dari Allah Yang Maha Perkasa lagi Maha Mengetahui, ۝ Yang Mengampuni dosa dan Menerima taubat lagi keras hukuman-Nya. Yang mempunyai karunia. Tiada Tuhan (yang berhak disembah) selain Dia. Hanya kepada-Nya-lah kembali (semua makhluk).',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Memperoleh ampunan dosa-dosa dan penerimaan taubat dari Allah Yang Maha Perkasa.'
   },
   {
     id: 14,
-    title: 'Perlindungan dari Kekafiran, Kefakiran & Azab Kubur',
-    arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلَٰهَ إِلَّا أَنْتَ',
-    latin: 'Allahumma inni a\'udhu bika minal-kufri wal-faqri, Allahumma inni a\'udhu bika min \'adhabil-qabri, la ilaha illa ant.',
-    translation: 'Ya Allah, aku berlindung kepada-Mu dari kekafiran dan kefakiran. Ya Allah, aku berlindung kepada-Mu dari azab kubur. Tiada Tuhan selain Engkau.',
-    target: 3,
-    count: 0,
-    fadilah: 'Menjaga keistiqomahan iman, menghindari kesulitan hidup, serta memohon keselamatan di alam kubur.'
+    title: 'QS. Al-Hasyr : 22 – 24',
+    arabic: 'هُوَ اللّٰهُ الَّذِيْ لَآ اِلٰهَ اِلَّا هُوَۚ عَالِمُ الْغَيْبِ وَالشَّهَادَةِۚ هُوَ الرَّحْمٰنُ الرَّحِيْمُ ۝ هُوَ اللّٰهُ الَّذِيْ لَآ اِلٰهَ اِلَّا هُوَ ۚ اَلْمَلِكُ الْقُدُّوْسُ السَّلٰمُ الْمُؤْمِنُ الْمُهَيْمِنُ الْعَزِيْزُ الْجَبَّارُ الْمُتَكَبِّرُۗ سُبْحٰنَ اللّٰهِ عَمَّا يُشْرِكُوْنَ ۝ هُوَ اللّٰهُ الْخَالِقُ الْبَارِئُ الْمُصَوِّرُ لَهُ الْاَسْمَاۤءُ الْحُسْنٰىۗ يُسَبِّحُ لَهُ مَا فِى السَّمٰوٰتِ وَالْاَرْضِۚ وَهُوَ الْعَزِيْزُ الْحَكِيْمُ ۝',
+    latin: 'huwaallaahulladzii laa ilaaha illaa huwa ‘aalimul ghaibi waasy-syahaadati huwarrahmaanurrahiimu. ۝ huwaallaahulladzii laa ilaaha illaa huwal malikul qudduusussalaamul mu\'minul muhaiminul ’aziizul jabbaarul mutakabbiru subhaanaallaahi ‘ammaa yusyrikuuna. ۝ huwaallaahul khaaliqulbaari-ul mushawwiru lahul-asmaa-ul husnaa yusabbihu lahu maa fiissamaawaati waal ardhi wahuwal ’aziizul hakiimu.',
+    translation: 'Dialah Allah Yang tiada Tuhan selain Dia, Yang Mengetahui yang ghaib dan yang nyata, Dialah Yang Maha Pemurah lagi Maha Penyayang...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Barangsiapa membacanya di pagi hari, 70 ribu malaikat bershalawat untuknya hingga sore.'
   },
   {
     id: 15,
-    title: 'Dzikir Hasbiyallahu (Kecukupan Hidup)',
-    arabic: 'حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ ۖ عَلَيْهِ تَوَكَّلْتُ ۖ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ',
-    latin: 'Hasbiyallahu la ilaha illa huwa \'alayhi tawakkaltu wa huwa rabbul-\'arshil-\'azhim.',
-    translation: 'Cukuplah Allah bagiku; tidak ada Tuhan selain Dia. Hanya kepada-Nya aku bertawakal, dan Dia adalah Tuhan yang memiliki Arasy yang agung.',
-    target: 7,
-    count: 0,
-    fadilah: 'Barangsiapa membacanya 7 kali di pagi/petang hari, Allah akan mencukupi segala kepentingan dunia dan akhiratnya.'
+    title: 'QS. Al-Zalzalah : 1 – 8',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ اِذَا زُلْزِلَتِ الْاَرْضُ زِلْزَالَهَاۙ ۝ وَاَخْرَجَتِ الْاَرْضُ اَثْقَالَهَاۙ ۝ وَقَالَ الْاِنْسَانُ مَا لَهَاۚ ۝ يَوْمَىِٕذٍ تُحَدِّثُ اَعْبَارَهَاۙ ۝ بِاَنَّ رَبَّكَ اَوْحٰى لَهَاۗ ۝ يَوْمَىِٕذٍ يَّصْدُرُ النَّاسُ اَشْتَاتًا ەۙ لِّيُرَوْا اَعْمَالَهُمْۗ ۝ فَمَنْ يَّعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَّرهٗۚ ۝ وَمَنْ يَّعْمَلْ مِثْقَالَ ذَرَّةٍ شَرًّا يَّرَهٗ ࣖ ۝',
+    latin: 'idzaa zulzilatil ardhu zilzaalahaa. ۝ wa akhrajatil ardhu atsqaalahaa. ۝ waqaalal insaanu maa lahaa. ۝ yauma idzin tuhadditsu akhbaarahaa. ۝ bi anna rabbaka auhaalahaa. ۝ yauma-idziy-yashduruunnaasu asytaatal-liyurau a’maalahum. ۝ famay-ya’mal mitsqaala dzarratin khairan yarahu. ۝ waman ya’mal mitsqaala dzarratin syarran yarahu.',
+    translation: 'Apabila bumi digoncangkan dengan goncangan (yang dahsyat), dan bumi telah mengeluarkan beban-beban berat... Barangsiapa yang mengerjakan kebaikan seberat dzarrahpun, niscaya dia akan melihatnya...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Menyamai setengah isi dari Al-Quran.'
   },
   {
     id: 16,
-    title: 'Dzikir Perlindungan Bahaya (Bismillahilladzi...)',
-    arabic: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
-    latin: 'Bismillahil-ladhi la yadhurru ma\'as-mihi shay\'un fil-ardhi wa la fis-samai wa huwas-sami\'ul-\'alim.',
-    translation: 'Dengan nama Allah yang bila disebut nama-Nya, segala sesuatu di bumi dan langit tidak akan berbahaya, dan Dia Maha Mendengar lagi Maha Mengetahui.',
-    target: 3,
-    count: 0,
-    fadilah: 'Tidak ada suatu musibah atau bahaya racun dan binatang yang dapat mencelakakannya sepanjang hari/malam.'
+    title: 'QS. Al-Kafirun : 1 – 6',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ قُلْ يٰٓاَيُّهَا الْكٰfِرُوْنَۙ ۝ لَآ اَعْبُدُ مَا تَعْبُدُوْنَۙ ۝ وَلَآ اَنْتُمْ عٰبِدُوْنَ مَآ اَعْبُدُۚ ۝ وَلَآ اَنَا۠ عَابِدٌ مَّا عَبَدْتُّمْۙ ۝ وَلَآ اَنْتُمْ عٰبِدُوْنَ مَآ اَعْبُدُۗ ۝ لَكُمْ دِيْنُكُمْ وَلِيَ دِيْنِ ࣖ ۝',
+    latin: 'Bismillaahirrahmaanirrahiim ۝ Qul yaa ayyuhal kaafiruuna. ۝ laa a\'budu maa ta\'buduuna. ۝ walaa antum \'aabiduuna maa a\'budu. ۝ walaa ana \'aabidum-maa \'abattum. ۝ walaa antum \'aabiduuna maa a\'budu. ۝ lakum diinukum waliya diin.',
+    translation: 'Katakanlah (wahai Muhammad) : “Hai orang-orang kafir. Aku tidak akan menyembah apa yang kamu sembah...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Terbebas dari kesyirikan, bernilai seperempat Al-Quran.'
   },
   {
     id: 17,
-    title: 'Dzikir Keridhaan (Tauhid Pengakuan)',
-    arabic: 'رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ نَبِيًّا وَرَسُولًا',
-    latin: 'Radhitu billahi rabba, wa bil-islami dina, wa bi-muhammadin nabiyya wa rasula.',
-    translation: 'Aku ridha Allah sebagai Tuhanku, Islam sebagai agamaku, dan Muhammad sebagai Nabi dan Rasul-Ku.',
-    target: 3,
-    count: 0,
-    fadilah: 'Allah menjamin akan memberikan keridhaan-Nya kepada hamba tersebut kelak di hari kiamat.'
+    title: 'QS. Al-Nasr : 1 – 3',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ اِذَا جَاۤءَ نَصْرُ اللّٰهِ وَالْفَتْحُۙ ۝ وَرَاَيْتَ النَّاسَ يَدْخُلُوْنَ فِيْ دِيْنِ اللّٰهِ اَفْوَاجًاۙ ۝ فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُۗ اِنَّهٗ كَانَ تَوَّابًا ࣖ ۝',
+    latin: 'Bismillaahirrahmaanirrahiiim ۝ Idzaa jaa-a nashrullaahi wal fath. ۝ wa ra-aitan-naasa yad-khuluuna fii diinillaahi afwaajaa. ۝ fasabbih bihamdi rabbika wastaghfirh, innahuu kaana tawwaabaa.',
+    translation: 'Apabila telah datang pertolongan Allah dan kemenangan... maka bertasbihlah dengan memuji Tuhanmu...',
+    sugraTarget: 1,
+    kubraTarget: 1,
+    isSugra: false,
+    fadilah: 'Menyamai seperempat isi Al-Quran, pengingat kemenangan dakwah Islam.'
   },
   {
     id: 18,
-    title: 'Dzikir Tasbih Pujian Kreator',
-    arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ: عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ',
-    latin: 'Subhanallahi wa bihamdihi: \'adada khalqih, wa ridha nafsih, wa zinata \'arshih, wa midada kalimatih.',
-    translation: 'Maha Suci Allah dan segala puji bagi-Nya sebanyak jumlah makhluk-Nya, seridha diri-Nya, seberat timbangan Arasy-Nya, dan sebanyak tinta kalimat-kalimat-Nya.',
-    target: 3,
-    count: 0,
-    fadilah: 'Memiliki timbangan pahala dzikir yang amat agung, melampaui dzikir berulang-ulang lainnya.'
+    title: 'QS. Al-Ikhlash : 1 – 4',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ قُلْ هُوَ اللّٰهُ اَحَدٌۚ ۝ اَللّٰهُ الصَّمَدُۚ ۝ لَمْ يَلِدْ وَلَمْ يُوْلَدْۙ ۝ وَلَمْ يَكُنْ لَّهٗ كُفُوًا اَحَدٌ ࣖ ۝',
+    latin: 'Bismillaahirrahmaanirrahiiim ۝ Qul huwallaahu ahad ۝ Allaahush-shamad ۝ Lam yalid walam yuulad. ۝ Walam yakul-lahuu kufuwan ahad.',
+    translation: 'Katakanlah: “Dialah Allah, Yang Maha Esa. Allah adalah Tuhan yang bergantung kepada-Nya segala sesuatu...',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Nilai keutamaannya menyamai sepertiga kandungan Al-Quran.'
   },
   {
     id: 19,
-    title: 'Dzikir Istighosah (Ya Hayyu Ya Qayyum...)',
-    arabic: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَىٰ نَفْسِي طَرْفَةَ عَيْنٍ',
-    latin: 'Ya hayyu ya qayyumu bi-rahmatika astaghith, aslih li sha\'ni kullahu wa la takilni ila nafsi tarfata \'ayn.',
-    translation: 'Wahai Yang Maha Hidup, Yang terus-menerus mengurus makhluk-Nya, dengan rahmat-Mu aku memohon pertolongan. Perbaikilah seluruh urusanku dan janganlah Engkau serahkan aku kepada diriku sendiri walau sekejap mata.',
-    target: 1,
-    count: 0,
-    fadilah: 'Memohon perbaikan urusan hidup secara menyeluruh dan perlindungan dari kesombongan diri.'
+    title: 'QS. Al-Falaq : 1 – 5',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ قُل| اَعُوْذُ بِرَبِّ الْفَلَقِۙ ۝ مِنْ شَرِّ مَا خَلَقَۙ ۝ وَمِنْ شَرِّ غَاسِقٍ اِذَا وَقَبَۙ ۝ وَمِنْ شَرِّ النَّفّٰثٰتِ فِى الْعُقَدِۙ - وَمِنْ شَرِّ حَاسِدٍ اِذَا حَسَدَ ࣖ ۝',
+    latin: 'Bismillaahirrahmaanirrahiiim ۝ Qul a\'uudzu bi rabbil-falaq ۝ Min syarri maa khalaq ۝ Wa min syarri ghaasiqin idzaa waqab ۝ Wa min syarrin-naffaatsaati fill \'uqad ۝ Wa min syarri haasidin idzaa hasad.',
+    translation: 'Katakanlah: "Aku berlindung kepada Tuhan yang menguasai subuh. Dari kejahatan makhluk-Nya...',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Diberikan perlindungan dari kejahatan malam, hasad, serta sihir tiupan buhul.'
   },
   {
     id: 20,
-    title: 'Sayyidul Istighfar (Rajanya Taubat)',
-    arabic: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ',
-    latin: 'Allahumma anta rabbi la ilaha illa ant, khalaqtani wa ana \'abduk, wa ana \'ala \'ahdika wa wa\'dika mastata\'t. A\'udhu bika min sharri ma sana\'t, abu\'u laka bi-ni\'matika \'alayya, wa abu\'u bi-dhanbi faghfir li, fa-innahu la yaghfirudh-dhunuba illa ant.',
-    translation: 'Ya Allah, Engkau adalah Tuhanku, tiada Tuhan selain Engkau. Engkau telah menciptakanku dan aku adalah hamba-Mu. Aku menetapi perjanjian-Mu dan janji-Mu sesuai kemampuanku. Aku berlindung kepada-Mu dari keburukan perbuatanku. Aku mengakui nikmat-Mu kepadaku dan mengakui dosaku, maka ampunilah aku. Karena sesungguhnya tiada yang mengampuni dosa selain Engkau.',
-    target: 1,
-    count: 0,
-    fadilah: 'Barangsiapa membacanya di siang/malam hari dengan penuh keimanan lalu wafat, maka ia termasuk ahli syurga.'
+    title: 'QS. An-Nas : 1 – 6',
+    arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ ۝ قُلْ اَعُوْذُ بِرَبِّ النَّاسِۙ ۝ مَلِكِ النَّاسِۙ ۝ اِلٰهِ النَّاسِۙ ۝ مِنْ شَرِّ الْوَسْوَاسِ ەۙ الْخَنَّاسِۖ ۝ الَّذِيْ يُوَسْوِسُ فِيْ صُدُوْرِ النَّاسِۙ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ ࣖ ۝',
+    latin: 'Bismillaahirrahmaanirrahiiim ۝ Qul a\'uudzubi rabbinnaas. ۝ Malikinnaas. ۝ ilaahinnaas. ۝ Min syarril waswaasil khannaas. ۝ Alladzii yuwaswisu fii shuduurinnaas. ۝ Minal jinnati wannaas.',
+    translation: 'Katakanlah: "Aku berlindung kepada Tuhan (yang memelihara dan menguasai) manusia. Raja manusia...',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Dilindungi dari bisikan buruk syetan yang bersembunyi dari jin maupun manusia.'
   },
   {
     id: 21,
-    title: 'Istighfar Taubat & Pembersih Hati',
-    arabic: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
-    latin: 'Astaghfirullaha wa atubu ilayh.',
-    translation: 'Aku memohon ampunan kepada Allah dan aku bertaubat kepada-Nya.',
-    target: 100,
-    count: 0,
-    fadilah: 'Menghilangkan kesempitan hati, melapangkan urusan rezeki, dan menghapuskan noda hitam dosa.'
+    title: 'Dzikir Keadaan Waktu (Ashbahna / Amsayna)',
+    isTimeDependent: true,
+    morningArabic: 'اَصْبَحْنَا وَاَصْبَحَ الْمُلْكُ لِلّٰهِ وَالْحَمْدُ لِلّٰهِ لَا شَرِيْكَ لَهُ. لَآ اِلٰهَ اِلَّا هُوَ وَاِلَيْهِ النُّشُوْرُ',
+    morningLatin: 'Ash-bahnā wa ash-bahal-mulku lillāhi wal-hamdulillāhi lā syarīka lahū lā ilāha illāhuwa wa ilaihi an-nusyūr.',
+    morningTranslation: 'Kami berpagi hari dan berpagi hari pula kerajaan milik Allah. Segala puji bagi Allah, tiada sekutu bagi-Nya, tiada Tuhan melainkan Dia dan kepada-Nya tempat kembali.',
+    eveningArabic: 'اَمْسَيْنَا وَاَمْسَى الْمُلْكُ Lِلّٰهِ وَالْحَمْدُ Lِلّٰهِ Lَا شَرِيْكَ Lَهُ. Lَآ اِلٰهَ اِلَّا هُوَ وَاِلَيْهِ الْمَصِيْرُ',
+    eveningLatin: 'Amsaynā wa amsal-mulku lillāhi wal-hamdulillāhi lā syarīka lahū lā ilāha illāhuwa wa ilaihi al-mashīr.',
+    eveningTranslation: 'Kami berpetang hari dan berpetang hari pula kerajaan milik Allah. Segala puji bagi Allah, tiada sekutu bagi-Nya, tiada Tuhan melainkan Dia dan kepada-Nya tempat kembali.',
+    sugraTarget: 1,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Merupakan bentuk kepasrahan dan pengakuan mutlak atas kekuasaan Allah di awal waktu.'
   },
   {
     id: 22,
-    title: 'Shalawat atas Nabi Muhammad SAW',
-    arabic: 'اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَعَلَىٰ آلِ مُحَمَّدٍ',
-    latin: 'Allahumma shalli \'ala Muhammadin wa \'ala ali Muhammad.',
-    translation: 'Ya Allah, limpahkanlah rahmat kepada Nabi Muhammad dan kepada keluarga Nabi Muhammad.',
-    target: 10,
-    count: 0,
-    fadilah: 'Mendapatkan syafaat istimewa dari Rasulullah SAW di yaumil akhir kelak.'
+    title: 'Dzikir Fitrah Islam',
+    isTimeDependent: true,
+    morningArabic: 'اَصْبَحْنَا عَلَى فِطْرَةِ الإِْسْلَامِ. وَكَلِمَةِ الْإِحْلَاصِ. وَعَلَى دِيْنِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللّهُ عَلَيْهِ وَسَلَّمَ. وَعَلَى مِلَّةِ أَبِيْنَا إِبْرَاهِيْمَ حَنِيْفًا. وَمَا كَانَ مِنَ الْمُشْرِكِيْنَ',
+    morningLatin: 'Ash-baḥnā ‘alā fiṭratil-islāmi wa ‘alā kalimatil-ikhlas wa ‘alā dīni nabiyyinā muḥammadin ṣallallāhu ‘alaihi wa sallam wa ‘alā millati abīnā ibrahīma ḥanīfan musliman wa mā kāna minal-musyrikīn.',
+    morningTranslation: 'Kami berpagi hari dalam keadaan fitrah Islam, dalam kalimat ikhlas, dalam agama Nabi kami Muhammad shallallahu ‘alaihi wa sallam, dalam agama ayah kami Ibrahim yang lurus, seorang muslim, dan tidaklah termasuk orang-orang musyrik.',
+    eveningArabic: 'اَمْسَيْنَا عَلَى فِطْرَةِ الإِْسْلَامِ. وَكَلِمَةِ الْإِحْلَاصِ. وَعَلَى دِيْنِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللّهُ عَلَيْهِ وَسَلَّمَ. وَعَلَى مِلَّةِ أَبِيْنَا إِبْرَاهِيْمَ حَنِيْفًا. وَمَا كَانَ مِنَ الْمُشْرِكِيْنَ',
+    eveningLatin: 'Amsaynā ‘alā fiṭratil-islāmi wa ‘alā kalimatil-ikhlas wa ‘alā dīni nabiyyinā muḥammadin ṣallallāhu ‘alaihi wa sallam wa ‘alā millati abīnā ibrahīma ḥanīfan musliman wa mā kāna minal-musyrikīn.',
+    eveningTranslation: 'Kami berpetang hari dalam keadaan fitrah Islam, dalam kalimat ikhlas, dalam agama Nabi kami Muhammad shallallahu ‘alaihi wa sallam, dalam agama ayah kami Ibrahim yang lurus, seorang muslim, dan tidaklah termasuk orang-orang musyrik.',
+    sugraTarget: 1,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Meneguhkan fondasi keimanan di atas fitrah Islam, kalimat ikhlas, dan ajaran Nabi Ibrahim.'
+  },
+  {
+    id: 23,
+    title: 'Dzikir Sempurnanya Nikmat',
+    isTimeDependent: true,
+    morningArabic: 'اللَّهُمَّ إِنِّي اَصْبَحْتُ مِنْكَ فِى نِعْمَةٍ وَعَافِيَةٍ وَسِتْرٍ. فَأَتِمَّ عَلَيَّ نِعْمَتَكَ وَعَافِيَتَكَ وَسِتْرَكَ فِي الدُّنْيَا وَ الْأَخِرَةِ',
+    morningLatin: 'Allāhumma innī ash-baḥtu minka fī ni‘matin wa ‘āfiyatins-sitr fa-atimm ‘alayya ni‘matak wa ‘āfiyatika wa sitraka fīd-dunyā wal-ākhirah.',
+    morningTranslation: 'Ya Allah, sesungguhnya aku telah memasuki waktu pagi dalam keadaan mendapat nikmat, sehat dan dalam keadaan tertutup. Maka sempurnakanlah atas diriku nikmat, kesehatan dan perlindungan-Mu di dunia dan akhirat.',
+    eveningArabic: 'اللَّهُمَّ إِنِّي اَمْسَيْتُ مِنْكَ فِى نِعْمَةٍ وَعَافِيَةٍ وَسِتْرٍ. فَأَتِمَّ عَلَيَّ نِعْمَتَكَ وَعَافِيَتَكَ وَسِtْرَكَ فِي الدُّنْيَا وَ الْأَخِرَةِ',
+    eveningLatin: 'Allāhumma innī amsaytu minka fī ni‘matin wa ‘āfiyatins-sitr fa-atimm ‘alayya ni‘matak wa ‘āfiyatika wa sitraka fīd-dunyā wal-ākhirah.',
+    eveningTranslation: 'Ya Allah, sesungguhnya aku telah memasuki waktu petang dalam keadaan mendapat nikmat, sehat dan dalam keadaan tertutup. Maka sempurnakanlah atas diriku nikmat, kesehatan dan perlindungan-Mu di dunia dan akhirat.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Siapa yang membacanya tiga kali di pagi/sore hari, maka Allah berjanji untuk menyempurnakan nikmat-Nya kepadanya.'
+  },
+  {
+    id: 24,
+    title: 'Dzikir Syukur Hari ini',
+    isTimeDependent: true,
+    morningArabic: 'اللُّهُمَّ مَآ أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيْكَ لَكَ. فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
+    morningLatin: 'Allāhumma mā ash-baha bī min ni‘matin aw bi-ahadin min khalqika faminka waḥdaka lā syarīka laka falaka al-ḥamdu wa laka ash-shukr.',
+    morningTranslation: 'Ya Allah, apa saja nikmat yang aku rasakan pagi ini atau yang diperoleh oleh salah seorang makhluk-Mu, maka semuanya datang dari-Mu semata, tiada sekutu bagi-Mu. Bagi-Mu segala puji dan syukur.',
+    eveningArabic: 'اللُّهُمَّ مَآ أَمْسَىٰ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيْكَ لَكَ. فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
+    eveningLatin: 'Allāhumma mā amsā bī min ni‘matin aw bi-ahadin min khalqika faminka waḥdaka lā syarīka laka falaka al-ḥamdu wa laka ash-shukr.',
+    eveningTranslation: 'Ya Allah, apa saja nikmat yang aku rasakan petang ini atau yang diperoleh oleh salah seorang makhluk-Mu, maka semuanya datang dari-Mu semata, tiada sekutu bagi-Mu. Bagi-Mu segala puji dan syukur.',
+    sugraTarget: 1,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Membacanya di pagi hari sama dengan telah menunaikan rasa syukur pada hari tersebut.'
+  },
+  {
+    id: 25,
+    title: 'Dzikir Pujian Keagungan (Yaa Rabbi Lakal Hamdu)',
+    arabic: 'يَارَبِّيْ لَكَ الْحَمْدُ كَمَا يَنْبَغِيْ Lِجَلَالِ وَجْهِكَ الْكَرِيْمِ وَعَظِيْمِ سُلْطَانِكَ',
+    latin: 'Yaa rabbi lakal hamdu kamaa yanbagii lijalaali wajhikal kariimi wa’azhiimi sulthanik.',
+    translation: 'Yaa Tuhanku, bagi-Mu segala puji sebagaimana yang selayaknya untuk kemuliaan wajah-Mu dan keagungan kekuasaan-Mu.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Saking agungnya kalimat pujian ini, malaikat pencatat kebaikan kesulitan mencatat pahalanya hingga diserahkan kepada Allah SWT langsung.'
+  },
+  {
+    id: 26,
+    title: 'Doa Keridhaan (Radhitu billahi rabba)',
+    arabic: 'رَضِتُ بِاللّٰهِ رَبَّا وَبِالْإِسْلاَمِ دِيْنَا وَبِمُحَمَّدٍ نَبِيًّا وَرَسُوْلاَ . رَبِّ زِدْ نِيْ عِلْمًـا وَرْزُقْنِـيْ فَهْمًـا وَاجْعَلْنِيْ مِنَ الصَّالِحِيْنَ',
+    latin: 'Radhiitu billahi rabba, wa bil islamidiina, wa bi Muhammadin nabiyawwarasuula, wa bilquraani imaamaa, wa bilmuslimiina ikhwaanaa. Rabbi zidnii \'ilma, warzuknii fahma, birahmatika yaa arhamarraahimiin.',
+    translation: 'Aku ridha Allah sebagai Tuhan, Islam sebagai agama, Muhammad sebagai Nabi dan Rasul, Al Qur’an sebagai imam, dan Umat Muslim sebagai saudara. Yaa Tuhaku, tambahkanlah aku akan ilmu, dan berilah aku karunia untuk dapat memahaminya. Wahai Dzat Yang Maha Pengasih lagi Penyayang.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Barangsiapa membacanya tiga kali di pagi dan petang, Allah pasti akan meridhai dirinya di Hari Kiamat kelak.'
+  },
+  {
+    id: 27,
+    title: 'Dzikir Tasbih Kalimat Penciptaan',
+    arabic: 'سُبْحَانَ اللّٰهِ وَbِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ',
+    latin: 'Subhaanallahi wa bihamdihi ‘adada khalqihi wa ridhaa nafsihi wa zinata ‘arsyihi wa midadaa kalimaatihi',
+    translation: 'Maha Suci Allah dan segala puji bagi-Nya sebanyak bilangan makhluk-Nya, serela diri-Nya, seberat timbangan ‘Arsy-Nya dan sebanyak tinta (bagi) kata-kata-Nya.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Kalimat yang bobot pahalanya melampaui zikir berulang-ulang selama berjam-jam.'
+  },
+  {
+    id: 28,
+    title: 'Dzikir Perlindungan Bahaya (Bismillahilladzi...)',
+    arabic: 'بِسْمِ Lلّٰهِ الَّذِي Lَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَLَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
+    latin: 'Bismillahil-ladzii laa yadhurru ma’asmihi syaiun fiil ardhi walaa fissamaa-i wa huwassamii’ul ‘aliim.',
+    translation: 'Dengan nama Allah, yang selama bersama nama-Nya tidak ada sesuatu pun di bumi ataupun di langit yang dapat membahayakan. Dan Dia-lah yang Maha Mendengar lagi Maha Mengetahui.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Membacanya tiga kali di pagi/sore hari menjamin pembacanya tidak akan terkena musibah mendadak hingga malam/pagi.'
+  },
+  {
+    id: 29,
+    title: 'Doa Perlindungan dari Kesyirikan',
+    arabic: 'اللّٰهُـمَّ إِنَّا نَعُوْذُبِكَ مِنْ أَنْ نُشْرِكَ بِكَ شَيْئًا نَعْلَمُهُ وَنَسْتَغْفِرُكَ لِمَا لَا نَعْلَمُهُ',
+    latin: 'Allahumma inna na’uudzubika min an nusyrika bika syai an na’lamuhu wa nastaghfiruka lima laa na’lamuh.',
+    translation: 'Yaa Allah, sesungguhnya kami berlindung kepada-Mu dari menyekutukan-Mu dengan sesuatu yang kami ketahui, dan kami mohon ampun kepada-Mu untuk sesuatu yang tidak kami ketahui.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Tameng pertahanan agar terjaga dari syirik besar maupun syirik kecil yang halus.'
+  },
+  {
+    id: 30,
+    title: 'Doa Perlindungan Kejahatan Makhluk (A\'udzu bikalimatillah...)',
+    arabic: 'أَعُوْذُ بِكَلِمَاتِ Lلّٰهِ الtَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
+    latin: 'A’uudzu bikalimaatillahittaammaati min syarrimaa khalaq',
+    translation: 'Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari keburukan yang Dia ciptakan.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Mencegah bahaya gigitan serangga berbisa, sengatan, serta kejahatan tak terlihat di sekitar.'
+  },
+  {
+    id: 31,
+    title: 'Doa Penghilang Gelisah & Hutang',
+    arabic: 'اَللّٰهُـمَّ اِنِّى اَعُوْذُ bِكَ مِنَ الْهَمِّ وَالْحَزَنِ , وَاَعُوذُ bِكَ مِنَ الْعَجْزِ وَالْكَسَلِ , وَاَعُوذُ bِكَ مِنَ الْجُبْنِ وَالْبُخْلِ , وَاَعُوذُ bِكَ مِنْ غَلَبَةِ الدَّيْنِ وَقَهْرِ الرِّ جَالِ',
+    latin: 'Allahumma inni a’uudzu bika minal hammi wal hazan wa a’uzuu bika minal ‘ajzi wal kasal wa ‘auuzu bika minal jubni wal bukhl wa a’uzuu bika min gholabati daini wa qohrirrijal.',
+    translation: 'Yaa Allah, aku berlindung kepada-Mu dari rasa gelisah dan sedih, dan aku berlindung kepada-Mu dari kelemahan dan kemalasan, dan aku berlindung kepada-Mu dari sifat pengecut dan bakhil, dan juga aku berlindung kepada-Mu dari tekanan hutang, dan kesewenang-wenangan orang.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Menghilangkan kemalasan, rasa lesu, kecemasan, kesedihan, dan jeratan hutang piutang.'
+  },
+  {
+    id: 32,
+    title: 'Doa Kesehatan Badan & Hati',
+    arabic: 'اللّٰهُـمَّ عَافِنِي فِي بَدَنِي، اللّٰهُـمَّ عَافِنِي فِي سَمْعِي، اللّٰهُـمَّ عَافِنِي فِي بَصَرِي، اللّٰهُـمَّ عَافِنِيْ فِيْ قَلْبِيْ',
+    latin: 'Allahumma ‘aafinii fii badanii, Allahumma ‘aafinii fii sam’ii, Allahumma ‘aa finii fii basharii, Allahumma \'aafinii fii qalbii.',
+    translation: 'Yaa Allah, sehatkanlah badanku. Yaa Allah sehatkanlah pendengaranku. Yaa Allah sehatkanlah penglihatanku. Yaa Allah sehatkanlah qolbunku (hatiku).',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Memperoleh nikmat afiat jasmani panca indera dan kesembuhan penyakit hati.'
+  },
+  {
+    id: 33,
+    title: 'Doa Perlindungan Kufur & Kubur',
+    arabic: 'اللّٰهُـمَّ إِنِّي أَعُوْذُبِكَ مِنَ الْكُفْرِ وَالْفَقْرِ, وَأَعُوْذُبِكَ مِنْ عَذَابِ الْقَبْرِ, لَآ إِلَهَ إِلَّا أَنْتَ',
+    latin: 'Allahumma innii a‘uudzu bika minal kufri wal faqri, Allahumma inni ‘auudzu bika min ‘adzaabil qabri, laa ilaaha illa anta.',
+    translation: 'Yaa Allah, aku berlindung kepada-Mu dari kekafiran dan kefakiran, dan aku berlindung kepada-Mu dari adzab kubur. Tiada Tuhan kecuali Engkau.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Dijauhkan dari bahaya kefakiran iman/harta serta siksa liang kubur.'
+  },
+  {
+    id: 34,
+    title: 'Sayyidul Istighfar (Penghulu Istighfar)',
+    arabic: 'اَللّٰهُـمَّ أَنْتَ رَبِّيْ لاَ إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِيْ وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوْذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوْءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوْءُ بِذَنْبِيْ فَاغْفِرْ لِيْ فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوْبَ إِلاَّ أَنْتَ',
+    latin: 'Allahumma anta rabbi laa ilaha illa anta khalaqtanii wa anaa ‘abduka wa anaa ‘alaa ‘ahdika wa wa’dika maastatha’tu a’udzuubika min syarrimaa shana’tu abuu-u laka bini’matika ‘alaiyya wa abuu-u bizanbii faaghfirlii fainnahu laa yaghfiru dzunuuba illa anta',
+    translation: 'Yaa Allah, Engkau Tuhanku, tiada Tuhan kecuali Engkau. Engkau ciptakan aku dan aku adalah hamba-Mu. Aku memegang teguh janji-Mu, semampuku. Aku berlindung kepada-Mu dari keburukan perbuatanku. Aku mengakui banyaknya nikmat (yang Engkau anugerahkan) kepadaku dan aku mengakui dosa-dosaku, maka ampunilah aku. Karena sesungguhnya tiada yang sanggup mengampuni dosa-dosa melainkan Engkau.',
+    sugraTarget: 1,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Barangsiapa membacanya di siang/malam hari dengan yakin lalu wafat pada hari itu, niscaya ia menjadi penghuni Surga.'
+  },
+  {
+    id: 35,
+    title: 'Istighfar & Taubat Lengkap',
+    arabic: 'أَسْتَغْفِرُ اللّٰهَ الَّذِي لَآ إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ',
+    latin: 'Astagfirullah, alladzii laa ilaaha illa huwal haiyyul qayyuum wa atuubu ilaih',
+    translation: 'Aku mohon ampun kepada Allah, yang tiada Tuhan kecuali Dia. Yang Maha hidup kekal dan senantiasa mengurus (makhluk-Nya) dan aku bertaubat kepada-Nya.',
+    sugraTarget: 3,
+    kubraTarget: 3,
+    isSugra: true,
+    fadilah: 'Diampuni dosa-dosanya meskipun ia pernah melarikan diri dari medan pertempuran.'
+  },
+  {
+    id: 36,
+    title: 'Shalawat Ibrahimiyah',
+    arabic: 'اللّٰهُـمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ، كَمَا صَلَّيْتَ عَـلَى سَيِّدِنَا إِبْرَاهِيْمَ وَعَلَى آلِ سَيِّدِنَا إِبْرَاهِيْمَ، وَبَارِكْ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ، كَمَا بَارَكْتَ عَلَى سَيِّدِنَا إِبْرَاهِيْمَ وَعَلَى آلِ سَيِّدِنَا إِبْرَاهِيْمَ فِيْ الْعَالَمِيْنَ، إِنَّكَ حَمِيْدٌ مَجِيْدٌ',
+    latin: 'Allaahumma shalli \'alaa sayyidinaa muhammadin wa \'alaa aalii sayyidinaa muhammadin, kamaa shallaita \'alaa sayyidinaa ibraahiima wa \'alaa aali sayyidinaa ibraahiim, wa baarik \'alaa sayyidinaa muhammadin wa \'alaa aali sayyidinaa muhammadin, kamaa baarakta \'alaa sayyidina ibraahiima wa \'alaa aali sayyidinaa ibraahiima, fil \'aalamiina innaka hamiidun majiid.',
+    translation: 'Yaa Allah, limpahkanlah rahmat kepada junjungan kami Nabi Muhammad serta keluarga junjungan kami Nabi Muhammad sebagaimana Engkau telah melimpahkan rahmat kepada junjungan kami Nabi Ibrahim beserta keluarga junjungan kami Nabi Ibrahim. Limpahkanlah barokah kepada junjungan kami Nabi Muhammad dan beserta keluarga junjungan kami Nabi Muhammad, sebagaimana Engkau telah limpahkan barokah kepada junjungan kami Nabi Ibrahim beserta keluarga Nabi Ibrahim di seluruh alam. Sesungguhnya, Engkaulah yang Maha Terpuji lagi Maha Mulia.',
+    sugraTarget: 10,
+    kubraTarget: 10,
+    isSugra: true,
+    fadilah: 'Bentuk shalawat paling utama, mendapatkan 10 kali limpahan rahmat serta syafaat Rasulullah SAW.'
   }
 ]);
 
@@ -304,11 +485,17 @@ const playSuccessBeep = () => {
   } catch (e) {}
 };
 
+// ── Get dynamic target based on mode ───────────────────────────────────────────
+const getDhikrTarget = (dhikr) => {
+  return activeDhikrMode.value === 'sugro' ? dhikr.sugraTarget : dhikr.kubraTarget;
+};
+
 // ── Interactive Logic ─────────────────────────────────────────────────────────
 const incrementDhikr = (dhikr) => {
-  if (dhikr.count < dhikr.target) {
+  const target = getDhikrTarget(dhikr);
+  if (dhikr.count < target) {
     dhikr.count++;
-    if (dhikr.count === dhikr.target) {
+    if (dhikr.count === target) {
       playSuccessBeep();
     } else {
       playBeep();
@@ -327,21 +514,26 @@ const resetAll = () => {
 };
 
 const completeAll = () => {
-  dhikrs.value.forEach(d => d.count = d.target);
+  dhikrs.value.forEach(d => d.count = getDhikrTarget(d));
   playSuccessBeep();
 };
 
 // ── Filters & Search ──────────────────────────────────────────────────────────
 const filteredDhikrs = computed(() => {
   let list = dhikrs.value;
+
+  // Filter based on Sugro vs Kubro
+  if (activeDhikrMode.value === 'sugro') {
+    list = list.filter(d => d.isSugra);
+  }
   
   // Search filter
   const q = searchQuery.value.toLowerCase().trim();
   if (q) {
     list = list.filter(d => 
       d.title.toLowerCase().includes(q) || 
-      d.latin.toLowerCase().includes(q) || 
-      d.translation.toLowerCase().includes(q)
+      (d.latin && d.latin.toLowerCase().includes(q)) || 
+      (d.translation && d.translation.toLowerCase().includes(q))
     );
   }
 
@@ -356,7 +548,7 @@ const dashboardUrl = computed(() => {
 </script>
 
 <template>
-  <Head title="Al-Ma'tsurat Wazifah Sugro" />
+  <Head title="Al-Ma'tsurat Dzikir Pagi & Petang" />
 
   <div class="min-h-screen bg-emerald-50/60 relative pb-20">
     <!-- Background Elements -->
@@ -385,8 +577,8 @@ const dashboardUrl = computed(() => {
               </svg>
             </div>
             <div class="flex flex-col">
-              <span class="text-sm sm:text-base font-bold text-emerald-900 leading-tight">Al-Ma'tsurat Sugro</span>
-              <span class="text-xs text-emerald-500 font-medium">Dzikir Pagi & Petang Lengkap</span>
+              <span class="text-sm sm:text-base font-bold text-emerald-900 leading-tight">Al-Ma'tsurat</span>
+              <span class="text-xs text-emerald-500 font-medium">Dzikir Pagi & Sore (Sugro & Kubro)</span>
             </div>
           </div>
 
@@ -423,49 +615,70 @@ const dashboardUrl = computed(() => {
       <!-- Hero Banner -->
       <div class="bg-gradient-to-r from-emerald-800 to-emerald-950 text-white rounded-2xl p-6 sm:p-7 shadow-xl mb-6 border border-emerald-700 relative overflow-hidden">
         <div class="absolute inset-0 opacity-[0.03]">
-          <div class="absolute top-4 right-8 text-8xl font-arabic select-none leading-none">وظيفة</div>
+          <div class="absolute top-4 right-8 text-8xl font-arabic select-none leading-none">المأثورات</div>
         </div>
         <div class="relative">
           <p class="text-amber-300 text-xs font-bold uppercase tracking-widest mb-1">Dzikir Harian Pagi & Petang</p>
-          <h1 class="text-2xl sm:text-3xl font-bold mb-1">Wazifah Sugro Lengkap</h1>
+          <h1 class="text-2xl sm:text-3xl font-bold mb-1">Al-Ma'tsurat Lengkap</h1>
           <p class="text-emerald-200 text-xs sm:text-sm max-w-xl leading-relaxed">
-            Daftar lengkap wazifah sugro Imam Hasan al-Banna dengan transliterasi Latin per-ayat, counter tasbih sentuh, dan pemutar audio murottal.
+            Data lengkap wazifah sugra & kubra bersumber langsung dari Al-Quran dan As-Sunnah. Ketuk kartu dzikir untuk menambah tasbih digital Anda.
           </p>
         </div>
       </div>
 
-      <!-- Audio player widget + Mode selector -->
+      <!-- Settings panel: Time selector + Sugro/Kubro selector -->
       <div class="bg-white border border-emerald-100 rounded-2xl p-4 shadow-sm space-y-4 mb-6">
         
-        <!-- Top: Audio & Time selector -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Controls Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           
-          <!-- Morning/Evening toggle -->
-          <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-250/20 w-fit">
-            <button
-              @click="activeTimeMode = 'pagi'"
-              :class="activeTimeMode === 'pagi' ? 'bg-amber-400 text-emerald-950 font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-950'"
-              class="px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1"
-            >
-              <span>☀️</span> Dzikir Pagi
-            </button>
-            <button
-              @click="activeTimeMode = 'petang'"
-              :class="activeTimeMode === 'petang' ? 'bg-emerald-800 text-white font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-955'"
-              class="px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1"
-            >
-              <span>🌙</span> Dzikir Petang
-            </button>
+          <!-- Mode Waktu & Jenis Dzikir -->
+          <div class="flex flex-wrap gap-2.5 items-center">
+            <!-- Pagi/Sore -->
+            <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-250/20">
+              <button
+                @click="activeTimeMode = 'pagi'"
+                :class="activeTimeMode === 'pagi' ? 'bg-amber-400 text-emerald-950 font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-950'"
+                class="px-3.5 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1"
+              >
+                <span>☀️</span> Pagi
+              </button>
+              <button
+                @click="activeTimeMode = 'petang'"
+                :class="activeTimeMode === 'petang' ? 'bg-emerald-850 text-white font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-955'"
+                class="px-3.5 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1"
+              >
+                <span>🌙</span> Sore
+              </button>
+            </div>
+
+            <!-- Sugro/Kubro -->
+            <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-250/20">
+              <button
+                @click="activeDhikrMode = 'sugro'"
+                :class="activeDhikrMode === 'sugro' ? 'bg-emerald-700 text-white font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-950'"
+                class="px-3.5 py-1.5 rounded-md text-[11px] font-bold transition-all"
+              >
+                Sugro
+              </button>
+              <button
+                @click="activeDhikrMode = 'kubro'"
+                :class="activeDhikrMode === 'kubro' ? 'bg-emerald-700 text-white font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-950'"
+                class="px-3.5 py-1.5 rounded-md text-[11px] font-bold transition-all"
+              >
+                Kubro
+              </button>
+            </div>
           </div>
 
-          <!-- Murottal Audio Player Widget -->
-          <div class="flex items-center gap-3 bg-emerald-50/70 border border-emerald-100 rounded-2xl px-4 py-2 flex-1 md:max-w-sm justify-between">
+          <!-- Murottal Player Widget -->
+          <div class="flex items-center gap-3 bg-emerald-50/70 border border-emerald-100 rounded-2xl px-4 py-2 justify-between">
             <div class="flex items-center gap-2">
               <span class="text-lg">🎧</span>
               <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Murottal Al-Ma'tsurat</span>
-                <span class="text-xs text-emerald-950 font-medium">
-                  {{ activeTimeMode === 'pagi' ? 'Versi Dzikir Pagi' : 'Versi Dzikir Petang' }}
+                <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">Audio Rekaman</span>
+                <span class="text-xs text-emerald-950 font-bold">
+                  {{ activeTimeMode === 'pagi' ? 'Murottal Pagi' : 'Murottal Sore' }}
                 </span>
               </div>
             </div>
@@ -473,9 +686,9 @@ const dashboardUrl = computed(() => {
             <button
               @click="togglePlayRecitation"
               :class="isAudioPlaying ? 'bg-red-650 hover:bg-red-700 text-white' : 'bg-emerald-700 hover:bg-emerald-800 text-white'"
-              class="px-3.5 py-1.5 rounded-xl font-bold text-[10px] shadow-sm transition-all flex items-center gap-1"
+              class="px-3.5 py-1.5 rounded-xl font-bold text-[10px] shadow-sm transition-all"
             >
-              <span>{{ isAudioPlaying ? 'Pause' : 'Putar Audio' }}</span>
+              {{ isAudioPlaying ? 'Pause' : 'Putar Murottal' }}
             </button>
           </div>
 
@@ -492,7 +705,7 @@ const dashboardUrl = computed(() => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari kata/ayat dzikir..."
+              placeholder="Cari lafal dzikir..."
               class="w-full pl-9 pr-4 py-2 border border-emerald-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
             />
           </div>
@@ -514,28 +727,20 @@ const dashboardUrl = computed(() => {
 
       </div>
 
-      <!-- Interactive Instruction Helper -->
-      <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 flex items-start gap-2.5 mb-5 shadow-sm">
-        <span>💡</span>
-        <p class="leading-relaxed">
-          <strong>Tip Kenyamanan:</strong> Anda dapat **mengetuk area mana saja di dalam kotak kartu dzikir** untuk menambah hitungan counter tasbih Anda dengan mudah.
-        </p>
-      </div>
-
-      <!-- Dhikr Cards List -->
+      <!-- Dzikir Cards List -->
       <div class="space-y-4">
         <div
           v-for="(dhikr, index) in filteredDhikrs"
           :key="dhikr.id"
           @click="incrementDhikr(dhikr)"
           class="bg-white border rounded-3xl p-5 sm:p-6 shadow-sm transition-all relative overflow-hidden cursor-pointer select-none active:scale-[0.99] duration-150"
-          :class="dhikr.count === dhikr.target 
+          :class="dhikr.count === getDhikrTarget(dhikr)
             ? 'border-emerald-500 shadow-emerald-500/5 ring-1 ring-emerald-500/25 bg-emerald-50/10' 
             : 'border-emerald-100 hover:border-emerald-200 hover:shadow-md'"
         >
           <!-- Corner checkmark for completed item -->
           <div 
-            v-if="dhikr.count === dhikr.target"
+            v-if="dhikr.count === getDhikrTarget(dhikr)"
             class="absolute top-0 right-0 w-12 h-12 bg-emerald-500 text-white rounded-bl-3xl flex items-center justify-center pt-2 pr-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -549,9 +754,17 @@ const dashboardUrl = computed(() => {
               {{ index + 1 }}
             </span>
             <div>
-              <h3 class="text-sm font-bold text-emerald-950">{{ dhikr.title }}</h3>
-              <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                Dibaca: {{ dhikr.target }} kali
+              <h3 class="text-sm font-bold text-emerald-950 flex items-center gap-2">
+                <span>{{ dhikr.title }}</span>
+                <span 
+                  v-if="!dhikr.isSugra" 
+                  class="bg-amber-100 text-amber-800 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase"
+                >
+                  Kubro Only
+                </span>
+              </h3>
+              <p class="text-[10px] text-gray-450 font-bold uppercase tracking-wider">
+                Target: {{ getDhikrTarget(dhikr) }} kali
               </p>
             </div>
           </div>
@@ -601,12 +814,12 @@ const dashboardUrl = computed(() => {
             <div class="flex-1">
               <div class="flex justify-between text-[10px] text-gray-400 font-bold mb-1">
                 <span>Progress Bacaan</span>
-                <span>{{ dhikr.count }} / {{ dhikr.target }}</span>
+                <span>{{ dhikr.count }} / {{ getDhikrTarget(dhikr) }}</span>
               </div>
               <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                 <div 
                   class="bg-emerald-600 h-1.5 transition-all duration-300"
-                  :style="{ width: (dhikr.count / dhikr.target * 100) + '%' }"
+                  :style="{ width: (dhikr.count / getDhikrTarget(dhikr) * 100) + '%' }"
                 ></div>
               </div>
             </div>
@@ -619,20 +832,20 @@ const dashboardUrl = computed(() => {
                 class="p-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors shadow-sm"
                 title="Reset hitungan dzikir ini"
               >
-                <svg xmlns="http://www.w3.org/2500/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 6H16" />
                 </svg>
               </button>
 
               <button
                 @click.stop="incrementDhikr(dhikr)"
-                :disabled="dhikr.count === dhikr.target"
+                :disabled="dhikr.count === getDhikrTarget(dhikr)"
                 class="px-4 py-2 font-bold text-xs rounded-xl shadow-sm border transition-all flex items-center gap-1.5"
-                :class="dhikr.count === dhikr.target
+                :class="dhikr.count === getDhikrTarget(dhikr)
                   ? 'bg-emerald-50 border-emerald-250 text-emerald-800 cursor-not-allowed shadow-none'
                   : 'bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700'"
               >
-                <span>{{ dhikr.count === dhikr.target ? 'Selesai' : 'Hitung +1' }}</span>
+                <span>{{ dhikr.count === getDhikrTarget(dhikr) ? 'Selesai' : 'Hitung +1' }}</span>
               </button>
             </div>
 

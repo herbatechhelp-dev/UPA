@@ -48,6 +48,14 @@ const submit = () => {
         </div>
         <h1 class="text-xl font-bold text-emerald-900 tracking-tight">{{ $page.props.settings?.app_title || 'Unit Pembinaan Anggota' }}</h1>
         <p class="text-sm text-gray-500 mt-1">Daftar akun baru untuk bergabung</p>
+        <div class="mt-4 flex items-center justify-center gap-3">
+          <a href="/quran" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-3 py-1.5 rounded-full text-xs transition-all border border-emerald-150 shadow-sm">
+            <span>📖</span> Al-Quran
+          </a>
+          <a href="/matsurat" class="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold px-3 py-1.5 rounded-full text-xs transition-all border border-amber-150 shadow-sm">
+            <span>✨</span> Al-Ma'tsurat
+          </a>
+        </div>
       </div>
 
       <!-- Registration Form Card -->

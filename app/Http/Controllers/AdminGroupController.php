@@ -274,8 +274,9 @@ class AdminGroupController extends Controller
                 foreach ($query->get() as $att) {
                     $statusName = match ($att->status) {
                         'present'    => 'Hadir',
+                        'late'       => 'Terlambat',
                         'sick'       => 'Sakit',
-                        'permission' => 'Izin',
+                        'permission' => 'I',
                         'absent'     => 'Alpa',
                         default      => $att->status
                     };
@@ -313,7 +314,7 @@ class AdminGroupController extends Controller
                                 ->whereIn('activity_id', $activityIds)
                                 ->get();
 
-                            $present = $attendances->where('status', 'present')->count();
+                            $present = $attendances->whereIn('status', ['present', 'late'])->count();
                             $sick = $attendances->where('status', 'sick')->count();
                             $permission = $attendances->where('status', 'permission')->count();
                             $absent = $attendances->where('status', 'absent')->count();
@@ -381,17 +382,18 @@ class AdminGroupController extends Controller
                             $att = $attendances->get($act->id);
                             if ($att) {
                                 $statusName = match ($att->status) {
-                                    'present'    => 'H',
-                                    'sick'       => 'S',
-                                    'permission' => 'I',
-                                    'absent'     => 'A',
-                                    default      => $att->status
-                                };
-
-                                if ($att->status === 'present') $present++;
-                                elseif ($att->status === 'sick') $sick++;
-                                elseif ($att->status === 'permission') $permission++;
-                                elseif ($att->status === 'absent') $absent++;
+                                     'present'    => 'H',
+                                     'late'       => 'T',
+                                     'sick'       => 'S',
+                                     'permission' => 'I',
+                                     'absent'     => 'A',
+                                     default      => $att->status
+                                 };
+ 
+                                 if ($att->status === 'present' || $att->status === 'late') $present++;
+                                 elseif ($att->status === 'sick') $sick++;
+                                 elseif ($att->status === 'permission') $permission++;
+                                 elseif ($att->status === 'absent') $absent++;
 
                                 $row[] = $statusName;
                             } else {
@@ -503,10 +505,10 @@ class AdminGroupController extends Controller
                         ->whereIn('activity_id', $activityIds)
                         ->get();
 
-                    $present = $attendances->where('status', 'present')->count();
-                    $sick = $attendances->where('status', 'sick')->count();
-                    $permission = $attendances->where('status', 'permission')->count();
-                    $absent = $attendances->where('status', 'absent')->count();
+                     $present = $attendances->whereIn('status', ['present', 'late'])->count();
+                     $sick = $attendances->where('status', 'sick')->count();
+                     $permission = $attendances->where('status', 'permission')->count();
+                     $absent = $attendances->where('status', 'absent')->count();
 
                     $percentage = $totalActivities > 0 ? round(($present / $totalActivities) * 100, 2) : 0;
 
@@ -577,12 +579,13 @@ class AdminGroupController extends Controller
                     if ($att) {
                         $statusName = match ($att->status) {
                             'present'    => 'H',
+                            'late'       => 'T',
                             'sick'       => 'S',
                             'permission' => 'I',
                             'absent'     => 'A',
                             default      => $att->status
                         };
-                        if ($att->status === 'present') $present++;
+                        if ($att->status === 'present' || $att->status === 'late') $present++;
                         elseif ($att->status === 'sick') $sick++;
                         elseif ($att->status === 'permission') $permission++;
                         elseif ($att->status === 'absent') $absent++;
@@ -859,5 +862,125 @@ class AdminGroupController extends Controller
         $user->update(['status' => 'rejected']);
 
         return redirect()->back()->with('success', "Pendaftaran {$user->name} telah ditolak.");
+    }
+
+    /**
+     * Import users from Excel/CSV file.
+     */
+    public function importUsers(Request $request): RedirectResponse
+    {
+        $currentUser = Auth::user();
+        if (!$currentUser->isAdmin() && !$currentUser->isSuperadmin()) {
+            abort(403, 'Hanya Admin atau Superadmin yang dapat mengimpor data user.');
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'], // max 5MB
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->getRealPath();
+
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return redirect()->back()->with('error', 'Gagal membuka file CSV.');
+        }
+
+        // Auto-detect delimiter: comma or semicolon
+        $firstLine = fgets($handle);
+        rewind($handle);
+        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+
+        // Skip header row
+        $header = fgetcsv($handle, 1000, $delimiter);
+
+        $rowCount = 0;
+        $successCount = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+            $rowCount++;
+
+            // Skip empty rows
+            if (empty($row) || count($row) < 2) {
+                continue;
+            }
+
+            $name = trim($row[0] ?? '');
+            $email = trim($row[1] ?? '');
+            $phone = isset($row[2]) ? trim($row[2]) : null;
+            $gender = isset($row[3]) ? strtolower(trim($row[3])) : null;
+            $department = isset($row[4]) ? trim($row[4]) : null;
+            $roleSlug = isset($row[5]) ? strtolower(trim($row[5])) : 'member';
+            $groupName = isset($row[6]) ? trim($row[6]) : null;
+
+            if (empty($name) || empty($email)) {
+                $errors[] = "Baris {$rowCount}: Nama Lengkap dan Email wajib diisi.";
+                continue;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Baris {$rowCount}: Format email '{$email}' tidak valid.";
+                continue;
+            }
+
+            // Check if email already exists
+            if (User::where('email', $email)->exists()) {
+                $errors[] = "Baris {$rowCount}: Email '{$email}' sudah terdaftar.";
+                continue;
+            }
+
+            // Normalize gender
+            if ($gender !== 'ikhwan' && $gender !== 'akhwat') {
+                $gender = null;
+            }
+
+            // Resolve role
+            $role = Role::where('slug', $roleSlug)->first();
+            if (!$role) {
+                $role = Role::where('slug', 'member')->first();
+            }
+            $roleId = $role ? $role->id : null;
+
+            try {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'gender' => $gender,
+                    'department' => $department,
+                    'role_id' => $roleId,
+                    'status' => 'approved',
+                    'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                ]);
+
+                // Attach to group if specified
+                if (!empty($groupName)) {
+                    $group = Group::where('name', $groupName)->first();
+                    if ($group) {
+                        $group->members()->attach($user->id);
+                    } else {
+                        $errors[] = "Baris {$rowCount}: User '{$name}' berhasil diimpor, tetapi kelompok '{$groupName}' tidak ditemukan.";
+                    }
+                }
+
+                $successCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Baris {$rowCount}: Gagal menyimpan user '{$name}'. Error: " . $e->getMessage();
+            }
+        }
+
+        fclose($handle);
+
+        $msg = "Berhasil mengimpor {$successCount} user.";
+        if (count($errors) > 0) {
+            $msg .= " Terdapat beberapa catatan: " . implode(" | ", array_slice($errors, 0, 5));
+            if (count($errors) > 5) {
+                $msg .= " (dan " . (count($errors) - 5) . " kesalahan lainnya)";
+            }
+            return redirect()->back()->with('warning', $msg);
+        }
+
+        return redirect()->back()->with('success', $msg);
     }
 }

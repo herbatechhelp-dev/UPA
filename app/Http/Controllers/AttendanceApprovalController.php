@@ -60,7 +60,7 @@ class AttendanceApprovalController extends Controller
         $validated = $request->validate([
             'attendances' => ['required', 'array'],
             'attendances.*.user_id' => ['required', 'exists:users,id'],
-            'attendances.*.status' => ['required', 'in:present,absent,sick,permission'],
+            'attendances.*.status' => ['required', 'in:present,late,absent,sick,permission'],
         ]);
 
         // 3. Process each attendance update

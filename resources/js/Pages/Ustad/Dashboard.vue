@@ -695,6 +695,9 @@ watch(activeTab, (newTab) => {
                         <span v-else-if="member.status === 'present'" class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-200">
                           Hadir
                         </span>
+                        <span v-else-if="member.status === 'late'" class="bg-teal-50 text-teal-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-teal-200">
+                          Terlambat
+                        </span>
                         <span v-else-if="member.status === 'sick'" class="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-200">
                           Sakit
                         </span>
@@ -965,12 +968,13 @@ watch(activeTab, (newTab) => {
                   class="px-2 py-0.5 rounded text-[10px] font-bold border flex-shrink-0"
                   :class="{
                     'bg-emerald-50 border-emerald-200 text-emerald-700': att.status === 'present',
+                    'bg-teal-50 border-teal-200 text-teal-700': att.status === 'late',
                     'bg-amber-50 border-amber-200 text-amber-700': att.status === 'sick',
                     'bg-blue-50 border-blue-200 text-blue-700': att.status === 'permission',
                     'bg-red-50 border-red-200 text-red-700': att.status === 'absent'
                   }"
                 >
-                  {{ att.status === 'present' ? 'Hadir' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa')) }}
+                  {{ att.status === 'present' ? 'Hadir' : (att.status === 'late' ? 'Terlambat' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa'))) }}
                 </span>
               </div>
               <div class="text-xs text-gray-600">
@@ -1008,12 +1012,13 @@ watch(activeTab, (newTab) => {
                       class="px-2.5 py-0.5 rounded text-[10px] font-bold border"
                       :class="{
                         'bg-emerald-50 border-emerald-200 text-emerald-700': att.status === 'present',
+                        'bg-teal-50 border-teal-200 text-teal-700': att.status === 'late',
                         'bg-amber-50 border-amber-200 text-amber-700': att.status === 'sick',
                         'bg-blue-50 border-blue-200 text-blue-700': att.status === 'permission',
                         'bg-red-50 border-red-200 text-red-700': att.status === 'absent'
                       }"
                     >
-                      {{ att.status === 'present' ? 'Hadir' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa')) }}
+                      {{ att.status === 'present' ? 'Hadir' : (att.status === 'late' ? 'Terlambat' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa'))) }}
                     </span>
                   </td>
                   <td class="py-3 px-6 text-emerald-800 font-semibold">{{ att.approved_by }}</td>

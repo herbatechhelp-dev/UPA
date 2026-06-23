@@ -20,7 +20,7 @@ const loadingTafsir   = ref({});      // { ayahNumber: true/false }
 const openTafsirAyah  = ref(null);    // currently open tafsir ayah number
 const playingAudio    = ref(null);    // currently playing ayah number
 const audioRef        = ref(null);
-const userBookmarks   = ref([...props.bookmarks]);
+const userBookmarks   = ref([...(props.bookmarks || [])]);
 const bookmarkIds     = ref({});      // { `${surahNum}-${ayahNum}`: bookmarkId }
 
 // ── Computed ──────────────────────────────────────────────────────────────────
@@ -121,6 +121,10 @@ const isBookmarked = (surahNum, ayahNum) => {
 };
 
 const toggleBookmark = async (ayah) => {
+  if (!props.auth) {
+    alert('Silakan login terlebih dahulu untuk menyimpan bookmark ayat.');
+    return;
+  }
   if (!selectedSurah.value) return;
   const key = `${selectedSurah.value.number}-${ayah.number}`;
 
@@ -218,17 +222,34 @@ const revelationBadge = (type) => type === 'Meccan' ? 'Makkiyah' : 'Madaniyah';
               <span>Kembali</span>
             </button>
             <a
-              :href="dashboardUrl"
-              class="flex items-center space-x-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-lg px-3 py-2 text-xs transition-colors shadow-sm"
-              title="Kembali ke Dashboard"
+              href="/matsurat"
+              class="flex items-center space-x-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-250 font-semibold rounded-lg px-3 py-2 text-xs transition-colors shadow-sm"
+              title="Baca Al-Ma'tsurat"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
-              <span class="hidden sm:inline">Dashboard</span>
+              <span>Al-Ma'tsurat</span>
             </a>
-            <button @click="handleLogout" class="text-gray-500 hover:text-red-700 font-semibold transition-colors flex items-center space-x-1 p-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-              <span class="hidden sm:inline text-xs">Logout</span>
-            </button>
+            <template v-if="auth">
+              <a
+                :href="dashboardUrl"
+                class="flex items-center space-x-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-lg px-3 py-2 text-xs transition-colors shadow-sm"
+                title="Kembali ke Dashboard"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
+                <span class="hidden sm:inline">Dashboard</span>
+              </a>
+              <button @click="handleLogout" class="text-gray-500 hover:text-red-700 font-semibold transition-colors flex items-center space-x-1 p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="hidden sm:inline text-xs">Logout</span>
+              </button>
+            </template>
+            <template v-else>
+              <a
+                href="/login"
+                class="flex items-center space-x-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-lg px-3 py-2 text-xs transition-colors shadow-sm"
+              >
+                <span>Login</span>
+              </a>
+            </template>
           </div>
         </div>
       </div>
@@ -319,7 +340,15 @@ const revelationBadge = (type) => type === 'Meccan' ? 'Makkiyah' : 'Madaniyah';
 
         <!-- Bookmarks Tab -->
         <div v-show="activeTab === 'bookmarks'">
-          <p v-if="userBookmarks.length === 0" class="text-center text-emerald-400 text-sm py-10">
+          <div v-if="!auth" class="text-center py-12 bg-white rounded-2xl border border-emerald-100 p-6 max-w-md mx-auto mt-6 shadow-sm">
+            <svg xmlns="http://www.w3.org/2059/svg" class="h-12 w-12 text-emerald-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <h3 class="font-bold text-emerald-900 text-sm mb-1">Butuh Akses Masuk</h3>
+            <p class="text-xs text-emerald-500 mb-4">Fitur bookmark ayat hanya tersedia untuk pengguna yang telah masuk ke dalam sistem.</p>
+            <a href="/login" class="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-colors">Login Sekarang</a>
+          </div>
+          <p v-else-if="userBookmarks.length === 0" class="text-center text-emerald-400 text-sm py-10">
             Belum ada bookmark. Tandai ayat favorit saat membaca surah.
           </p>
           <div v-else class="space-y-2">

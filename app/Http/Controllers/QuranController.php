@@ -40,21 +40,25 @@ class QuranController extends Controller
             return [];
         });
 
-        $bookmarks = QuranBookmark::where('user_id', Auth::id())
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn (QuranBookmark $b) => [
-                'id'           => $b->id,
-                'surah_number' => $b->surah_number,
-                'ayah_number'  => $b->ayah_number,
-                'surah_name'   => $b->surah_name,
-                'ayah_text'    => $b->ayah_text,
-                'created_at'   => $b->created_at->diffForHumans(),
-            ]);
+        $bookmarks = [];
+        if (Auth::check()) {
+            $bookmarks = QuranBookmark::where('user_id', Auth::id())
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn (QuranBookmark $b) => [
+                    'id'           => $b->id,
+                    'surah_number' => $b->surah_number,
+                    'ayah_number'  => $b->ayah_number,
+                    'surah_name'   => $b->surah_name,
+                    'ayah_text'    => $b->ayah_text,
+                    'created_at'   => $b->created_at->diffForHumans(),
+                ]);
+        }
 
         return Inertia::render('Quran', [
             'surahs'    => $surahs,
             'bookmarks' => $bookmarks,
+            'auth'      => Auth::check() ? Auth::user()->load('role') : null,
         ]);
     }
 
@@ -116,18 +120,23 @@ class QuranController extends Controller
             return response()->json(['error' => 'Gagal memuat data surah. Coba lagi nanti.'], 500);
         }
 
-        // Attach bookmark status for current user
-        $userBookmarks = QuranBookmark::where('user_id', Auth::id())
-            ->where('surah_number', $number)
-            ->pluck('ayah_number')
-            ->toArray();
+        // Attach bookmark status for current user if logged in
+        $userBookmarks = [];
+        if (Auth::check()) {
+            $userBookmarks = QuranBookmark::where('user_id', Auth::id())
+                ->where('surah_number', $number)
+                ->pluck('ayah_number')
+                ->toArray();
+        }
 
         foreach ($data['ayahs'] as &$ayah) {
             $ayah['is_bookmarked'] = in_array($ayah['number'], $userBookmarks);
-            $ayah['bookmark_id'] = QuranBookmark::where('user_id', Auth::id())
-                ->where('surah_number', $number)
-                ->where('ayah_number', $ayah['number'])
-                ->value('id');
+            $ayah['bookmark_id'] = Auth::check()
+                ? QuranBookmark::where('user_id', Auth::id())
+                    ->where('surah_number', $number)
+                    ->where('ayah_number', $ayah['number'])
+                    ->value('id')
+                : null;
         }
 
         return response()->json($data);
@@ -231,5 +240,15 @@ class QuranController extends Controller
             ]);
 
         return response()->json(['bookmarks' => $bookmarks]);
+    }
+
+    /**
+     * Display the Al-Ma'tsurat page.
+     */
+    public function matsurat(): Response
+    {
+        return Inertia::render('Matsurat', [
+            'auth' => Auth::check() ? Auth::user()->load('role') : null,
+        ]);
     }
 }

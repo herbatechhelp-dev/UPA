@@ -113,6 +113,50 @@ const reportForm = useForm({
   type: 'attendance' // 'attendance' | 'grades'
 });
 
+// Import Users Form
+const showImportModal = ref(false);
+const importForm = useForm({
+  file: null
+});
+
+const openImportModal = () => {
+  importForm.reset();
+  showImportModal.value = true;
+};
+
+const handleImportFileUpload = (event) => {
+  importForm.file = event.target.files[0];
+};
+
+const submitImport = () => {
+  if (!importForm.file) {
+    alert('Silakan pilih file CSV terlebih dahulu.');
+    return;
+  }
+  importForm.post('/users/import', {
+    onSuccess: () => {
+      showImportModal.value = false;
+      importForm.reset();
+      triggerNotification('Data pengguna berhasil diimpor!');
+    }
+  });
+};
+
+const downloadCSVTemplate = () => {
+  const headers = ['Nama Lengkap', 'Email', 'No Telepon', 'Gender (ikhwan/akhwat)', 'Jurusan/Departemen', 'Peran (member/leader/ustad)', 'Nama Kelompok'];
+  const sampleRow = ['Budi Santoso', 'budi@email.com', '08123456789', 'ikhwan', 'Teknik Informatika', 'member', 'Halaqah A'];
+  const csvContent = "\uFEFF" + [headers.join(','), sampleRow.join(',')].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "template_impor_pengguna.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 // Search Queries
 const searchGroupQuery = ref('');
 const searchMaterialQuery = ref('');
@@ -534,15 +578,26 @@ const rejectPendingUser = (user) => {
               <h2 class="text-lg font-bold text-emerald-950">Daftar Halaqah Binaan</h2>
               <p class="text-xs text-gray-500 font-medium">Plotting Ustad pembina, Ketua Kelompok, dan anggota halaqah binaan.</p>
             </div>
-            <button 
-              @click="openAddGroup"
-              class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-300" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-              </svg>
-              <span>Tambah Kelompok Baru</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                @click="openImportModal"
+                class="bg-white hover:bg-gray-50 text-emerald-700 border border-emerald-200 font-bold text-xs py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>Impor Pengguna (CSV)</span>
+              </button>
+              <button 
+                @click="openAddGroup"
+                class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>Tambah Kelompok Baru</span>
+              </button>
+            </div>
           </div>
 
           <div class="mb-4">
@@ -847,12 +902,13 @@ const rejectPendingUser = (user) => {
                   class="px-2 py-0.5 rounded text-[10px] font-bold border flex-shrink-0"
                   :class="{
                     'bg-emerald-50 border-emerald-200 text-emerald-700': att.status === 'present',
+                    'bg-teal-50 border-teal-200 text-teal-700': att.status === 'late',
                     'bg-amber-50 border-amber-200 text-amber-700': att.status === 'sick',
                     'bg-blue-50 border-blue-200 text-blue-700': att.status === 'permission',
                     'bg-red-50 border-red-200 text-red-700': att.status === 'absent'
                   }"
                 >
-                  {{ att.status === 'present' ? 'Hadir' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa')) }}
+                  {{ att.status === 'present' ? 'Hadir' : (att.status === 'late' ? 'Terlambat' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa'))) }}
                 </span>
               </div>
               <div class="text-xs text-gray-600">
@@ -890,12 +946,13 @@ const rejectPendingUser = (user) => {
                       class="px-2.5 py-0.5 rounded text-[10px] font-bold border"
                       :class="{
                         'bg-emerald-50 border-emerald-200 text-emerald-700': att.status === 'present',
+                        'bg-teal-50 border-teal-200 text-teal-700': att.status === 'late',
                         'bg-amber-50 border-amber-200 text-amber-700': att.status === 'sick',
                         'bg-blue-50 border-blue-200 text-blue-700': att.status === 'permission',
                         'bg-red-50 border-red-200 text-red-700': att.status === 'absent'
                       }"
                     >
-                      {{ att.status === 'present' ? 'Hadir' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa')) }}
+                      {{ att.status === 'present' ? 'Hadir' : (att.status === 'late' ? 'Terlambat' : (att.status === 'sick' ? 'Sakit' : (att.status === 'permission' ? 'Izin' : 'Alpa'))) }}
                     </span>
                   </td>
                   <td class="py-3 px-6 text-emerald-800 font-semibold">{{ att.approved_by }}</td>
@@ -1480,6 +1537,7 @@ const rejectPendingUser = (user) => {
               <span class="text-xs font-semibold text-gray-800">{{ att.name }}</span>
               <select v-model="attendanceForm.attendances[idx].status" class="border border-gray-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500 outline-none">
                 <option value="present">Hadir</option>
+                <option value="late">Terlambat</option>
                 <option value="sick">Sakit</option>
                 <option value="permission">Izin</option>
                 <option value="absent">Alpa</option>
@@ -1532,6 +1590,73 @@ const rejectPendingUser = (user) => {
           <div class="pt-4 border-t border-gray-100 flex gap-3">
             <button type="button" @click="showApproveModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
             <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">Approve</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: IMPORT USER FROM CSV/EXCEL -->
+    <div v-if="showImportModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm transition-opacity" @click="showImportModal = false"></div>
+
+      <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-50 animate-slide-up">
+        <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
+          <h3 class="text-base sm:text-lg font-bold">Impor Akun Pengguna</h3>
+          <button @click="showImportModal = false" class="text-emerald-200 hover:text-white transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="submitImport" class="p-6 space-y-5">
+          <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 space-y-2">
+            <h4 class="text-xs font-bold text-emerald-850 uppercase">Panduan Impor Data</h4>
+            <ul class="text-[11px] text-gray-600 list-disc list-inside space-y-1">
+              <li>Unggah file berformat <strong>.csv</strong> saja.</li>
+              <li>Pastikan kolom pertama adalah <strong>Nama Lengkap</strong> dan kolom kedua adalah <strong>Email</strong> (wajib).</li>
+              <li>No Telepon, Gender, Departemen, Peran, dan Nama Kelompok bersifat opsional.</li>
+              <li>Format Gender: <strong>ikhwan</strong> atau <strong>akhwat</strong>.</li>
+              <li>Peran yang valid: <strong>member</strong>, <strong>leader</strong>, atau <strong>ustad</strong>.</li>
+              <li>Nama Kelompok harus persis sama dengan yang ada di database.</li>
+              <li>Password akun baru otomatis diset ke <strong>password123</strong>.</li>
+            </ul>
+            <div class="pt-2">
+              <button 
+                type="button" 
+                @click="downloadCSVTemplate" 
+                class="text-[11px] text-emerald-700 hover:text-emerald-950 font-bold underline flex items-center gap-1"
+              >
+                📥 Unduh Template CSV Impor
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="import_file" class="text-xs font-bold text-gray-500 uppercase block">Pilih File CSV</label>
+            <input 
+              id="import_file" 
+              type="file" 
+              accept=".csv" 
+              required 
+              @change="handleImportFileUpload" 
+              class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+            />
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 flex gap-3">
+            <button type="button" @click="showImportModal = false" class="flex-1 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Batal</button>
+            <button 
+              type="submit" 
+              :disabled="importForm.processing"
+              class="flex-1 bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg v-if="importForm.processing" class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Mulai Impor</span>
+            </button>
           </div>
         </form>
       </div>

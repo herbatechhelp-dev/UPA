@@ -60,6 +60,16 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
+        // Block login for regular users / members
+        if ($user->role && $user->role->slug === 'member') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors([
+                'email' => 'User biasa (Anggota) tidak diperbolehkan login. Seluruh kegiatan absensi dicatat langsung oleh Ketua Kelompok.',
+            ])->onlyInput('email');
+        }
+
         // Redirect to the appropriate dashboard based on role
         return redirect($this->resolveDashboard($user));
     }

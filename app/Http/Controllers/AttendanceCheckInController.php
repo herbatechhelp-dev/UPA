@@ -21,7 +21,7 @@ class AttendanceCheckInController extends Controller
 
         $validated = $request->validate([
             'activity_id' => ['required', 'exists:activities,id'],
-            'status'      => ['nullable', 'in:present,sick,permission'],
+            'status'      => ['nullable', 'in:present,late,sick,permission'],
         ]);
 
         $activity = Activity::with('group')->findOrFail($validated['activity_id']);

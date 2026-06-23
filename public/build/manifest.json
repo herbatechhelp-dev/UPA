@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CWjY-n5p.css",
+    "file": "assets/app-9vvEbJkx.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/Pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-iXr_gwiF.js",
+    "file": "assets/Dashboard-DSZ97Y-f.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -13,11 +13,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-DsdrgMhN.css"
+      "assets/Dashboard-tDL5xzYi.css"
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-CDJiolWP.js",
+    "file": "assets/Login-m5jq35P3.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -26,7 +26,7 @@
     ]
   },
   "resources/js/Pages/Auth/Register.vue": {
-    "file": "assets/Register-p86AOki1.js",
+    "file": "assets/Register-DhzDOpj6.js",
     "name": "Register",
     "src": "resources/js/Pages/Auth/Register.vue",
     "isDynamicEntry": true,
@@ -35,7 +35,7 @@
     ]
   },
   "resources/js/Pages/Leader/Dashboard.vue": {
-    "file": "assets/Dashboard-DF9letS3.js",
+    "file": "assets/Dashboard-Bl95rAb9.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Leader/Dashboard.vue",
     "isDynamicEntry": true,
@@ -43,11 +43,23 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-yCik8v_d.css"
+      "assets/Dashboard-UQi6wzMi.css"
+    ]
+  },
+  "resources/js/Pages/Matsurat.vue": {
+    "file": "assets/Matsurat-2aWa0ydu.js",
+    "name": "Matsurat",
+    "src": "resources/js/Pages/Matsurat.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "css": [
+      "assets/Matsurat-COcNuYJ4.css"
     ]
   },
   "resources/js/Pages/Member/Dashboard.vue": {
-    "file": "assets/Dashboard-DJ3FqxOt.js",
+    "file": "assets/Dashboard-C1Z0-7dn.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Member/Dashboard.vue",
     "isDynamicEntry": true,
@@ -59,7 +71,7 @@
     ]
   },
   "resources/js/Pages/Quran.vue": {
-    "file": "assets/Quran-DFpO2Kyr.js",
+    "file": "assets/Quran-Bu_i_bFU.js",
     "name": "Quran",
     "src": "resources/js/Pages/Quran.vue",
     "isDynamicEntry": true,
@@ -67,11 +79,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Quran-4iGzb6jN.css"
+      "assets/Quran-DzaPSjJs.css"
     ]
   },
   "resources/js/Pages/Superadmin/Dashboard.vue": {
-    "file": "assets/Dashboard-BT6KrwsQ.js",
+    "file": "assets/Dashboard-DdlmDUdC.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Superadmin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -79,11 +91,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-Cbd2UiQZ.css"
+      "assets/Dashboard-DPMb2n3F.css"
     ]
   },
   "resources/js/Pages/Ustad/Dashboard.vue": {
-    "file": "assets/Dashboard-Nq9JvP0U.js",
+    "file": "assets/Dashboard-aEo2nxJT.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Ustad/Dashboard.vue",
     "isDynamicEntry": true,
@@ -91,11 +103,23 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/Dashboard-k7igJLIW.css"
+      "assets/Dashboard-appRza1B.css"
+    ]
+  },
+  "resources/js/Pages/Welcome.vue": {
+    "file": "assets/Welcome-DBlfiUrF.js",
+    "name": "Welcome",
+    "src": "resources/js/Pages/Welcome.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "css": [
+      "assets/Welcome-DElX8UZS.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DZWeTY7r.js",
+    "file": "assets/app-CWVo7YWe.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -104,13 +128,15 @@
       "resources/js/Pages/Auth/Login.vue",
       "resources/js/Pages/Auth/Register.vue",
       "resources/js/Pages/Leader/Dashboard.vue",
+      "resources/js/Pages/Matsurat.vue",
       "resources/js/Pages/Member/Dashboard.vue",
       "resources/js/Pages/Quran.vue",
       "resources/js/Pages/Superadmin/Dashboard.vue",
-      "resources/js/Pages/Ustad/Dashboard.vue"
+      "resources/js/Pages/Ustad/Dashboard.vue",
+      "resources/js/Pages/Welcome.vue"
     ],
     "css": [
-      "assets/app-C517eDqZ.css"
+      "assets/app-Cym4uFuy.css"
     ]
   }
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 
 // Props passed from controller
@@ -15,7 +15,6 @@ const props = defineProps({
 const personalCheckedIn = ref(props.hasCheckedIn);
 const showSuccessNotification = ref(false);
 const notificationMessage = ref('');
-
 
 // Form for self check-in
 const checkInForm = useForm({
@@ -39,28 +38,42 @@ const selfCheckIn = () => {
   });
 };
 
-const approveMember = (member) => {
-  if (!props.activeActivity) return;
-  router.post(`/activities/${props.activeActivity.id}/attendances/${member.id}/approve`, {}, {
-    onSuccess: () => {
-      notificationMessage.value = `Kehadiran ${member.name} berhasil disetujui!`;
-      showSuccessNotification.value = true;
-      setTimeout(() => showSuccessNotification.value = false, 4000);
-    }
-  });
+// Form for bulk attendance input by Group Leader
+const groupAttendanceForm = useForm({
+  attendances: []
+});
+
+const initAttendanceForm = () => {
+  if (props.group && props.group.members) {
+    groupAttendanceForm.attendances = props.group.members.map(member => ({
+      user_id: member.id,
+      status: member.status || 'present'
+    }));
+  }
 };
 
-const rejectMember = (member) => {
-  if (!props.activeActivity) return;
-  if (confirm(`Apakah Anda yakin ingin menolak/menghapus kehadiran ${member.name}?`)) {
-    router.post(`/activities/${props.activeActivity.id}/attendances/${member.id}/reject`, {}, {
-      onSuccess: () => {
-        notificationMessage.value = `Kehadiran ${member.name} berhasil ditolak!`;
-        showSuccessNotification.value = true;
-        setTimeout(() => showSuccessNotification.value = false, 4000);
-      }
-    });
+const getMemberStatus = (userId) => {
+  const record = groupAttendanceForm.attendances.find(a => a.user_id === userId);
+  return record ? record.status : 'present';
+};
+
+const updateMemberStatus = (userId, status) => {
+  const record = groupAttendanceForm.attendances.find(a => a.user_id === userId);
+  if (record) {
+    record.status = status;
   }
+};
+
+const submitGroupAttendance = () => {
+  if (!props.activeActivity) return;
+  groupAttendanceForm.post(`/activities/${props.activeActivity.id}/attendances/approve`, {
+    onSuccess: () => {
+      notificationMessage.value = 'Absensi kelompok berhasil disimpan!';
+      showSuccessNotification.value = true;
+      setTimeout(() => showSuccessNotification.value = false, 4000);
+      fetchWebRecapData(); // Refresh the monthly recap web view
+    }
+  });
 };
 
 const recapForm = ref({
@@ -105,8 +118,13 @@ const fetchWebRecapData = async () => {
 };
 
 onMounted(() => {
+  initAttendanceForm();
   fetchWebRecapData();
 });
+
+watch(() => props.group?.members, () => {
+  initAttendanceForm();
+}, { deep: true });
 </script>
 
 <template>
@@ -347,59 +365,83 @@ onMounted(() => {
                   </div>
                   
                   <div class="flex items-center space-x-3 justify-between sm:justify-end">
-                    <!-- Status Submitted by User -->
-                    <div>
-                      <span v-if="!member.status" class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-200">
-                        Belum Check-in
-                      </span>
-                      <span v-else-if="member.status === 'present'" class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-200">
-                        Hadir
-                      </span>
-                      <span v-else-if="member.status === 'sick'" class="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-200">
+                    <!-- Status Button Group (Tepat Waktu, Terlambat, Sakit, Izin, Alpa) -->
+                    <div class="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-250/30">
+                      <button 
+                        type="button"
+                        @click="updateMemberStatus(member.id, 'present')"
+                        class="px-2.5 sm:px-3 py-1 rounded-md text-[11px] font-bold transition-all"
+                        :class="getMemberStatus(member.id) === 'present' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+                      >
+                        Tepat Waktu
+                      </button>
+                      <button 
+                        type="button"
+                        @click="updateMemberStatus(member.id, 'late')"
+                        class="px-2.5 sm:px-3 py-1 rounded-md text-[11px] font-bold transition-all"
+                        :class="getMemberStatus(member.id) === 'late' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+                      >
+                        Terlambat
+                      </button>
+                      <button 
+                        type="button"
+                        @click="updateMemberStatus(member.id, 'sick')"
+                        class="px-2.5 sm:px-3 py-1 rounded-md text-[11px] font-bold transition-all"
+                        :class="getMemberStatus(member.id) === 'sick' ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+                      >
                         Sakit
-                      </span>
-                      <span v-else-if="member.status === 'permission'" class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-blue-200">
+                      </button>
+                      <button 
+                        type="button"
+                        @click="updateMemberStatus(member.id, 'permission')"
+                        class="px-2.5 sm:px-3 py-1 rounded-md text-[11px] font-bold transition-all"
+                        :class="getMemberStatus(member.id) === 'permission' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+                      >
                         Izin
-                      </span>
-                      <span v-else-if="member.status === 'absent'" class="bg-red-50 text-red-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-red-200">
+                      </button>
+                      <button 
+                        type="button"
+                        @click="updateMemberStatus(member.id, 'absent')"
+                        class="px-2.5 sm:px-3 py-1 rounded-md text-[11px] font-bold transition-all"
+                        :class="getMemberStatus(member.id) === 'absent' ? 'bg-red-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+                      >
                         Alpa
-                      </span>
+                      </button>
                     </div>
 
-                    <!-- Approval state & Action buttons -->
-                    <div v-if="member.status" class="flex items-center space-x-2">
-                      <span v-if="member.is_approved" class="text-xs bg-emerald-700 text-white font-bold px-2 py-1 rounded-lg flex items-center space-x-0.5 shadow-sm">
+                    <!-- Approval Badge / Indicator -->
+                    <div>
+                      <span v-if="member.is_approved" class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded border border-emerald-200 inline-flex items-center gap-0.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span>Disetujui</span>
+                        <span>Sudah Disimpan</span>
                       </span>
-                      
-                      <button 
-                        v-if="!member.is_approved"
-                        type="button" 
-                        @click="approveMember(member)"
-                        class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold py-1 px-2.5 rounded-lg shadow-sm transition-colors"
-                      >
-                        Setujui
-                      </button>
-                      <button 
-                        type="button" 
-                        @click="rejectMember(member)"
-                        class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold py-1 px-2.5 rounded-lg shadow-sm transition-colors"
-                      >
-                        Tolak
-                      </button>
+                      <span v-else class="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200">
+                        Belum Simpan
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Info Section -->
-              <div class="p-6 bg-gray-50/50">
-                <span class="text-[11px] text-gray-500 block">
-                  ℹ️ Validasi absensi dilakukan dengan meninjau status check-in mandiri anggota kelompok, lalu menyetujui (Setujui) atau menolak (Tolak). Menolak akan menghapus log check-in anggota tersebut.
+              <!-- Submit and Info Section -->
+              <div class="p-6 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-gray-100">
+                <span class="text-[11px] text-gray-500 max-w-sm">
+                  ℹ️ Pilih status kehadiran untuk masing-masing anggota di atas, lalu klik <strong>Simpan Absensi Kelompok</strong> untuk menyimpan data ke server.
                 </span>
+                <button 
+                  type="button"
+                  @click="submitGroupAttendance"
+                  :disabled="groupAttendanceForm.processing"
+                  class="bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5"
+                >
+                  <svg v-if="groupAttendanceForm.processing" class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Simpan Absensi Kelompok</span>
+                </button>
               </div>
             </div>
           </div>

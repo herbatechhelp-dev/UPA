@@ -14,14 +14,18 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SuperadminDashboardController;
 use App\Http\Controllers\UstadDashboardController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 // ─────────────────────────────────────────────────────────
 // Public Routes
 // ─────────────────────────────────────────────────────────
 
 Route::get('/', function () {
-    return redirect()->route('login');
-});
+    return Inertia::render('Welcome', [
+        'auth' => Auth::check() ? Auth::user()->load('role') : null,
+    ]);
+})->name('welcome');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -202,15 +206,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/recap-data', [AdminGroupController::class, 'getRecapData'])
         ->name('reports.recap-data');
 
+    // Import Users from Excel/CSV (Admin or Superadmin)
+    Route::post('/users/import', [AdminGroupController::class, 'importUsers'])
+        ->name('users.import');
+
     // Material download — all authenticated users
     Route::get('/materials/{material}/download', [MaterialController::class, 'download'])
         ->name('materials.download');
 
-    // ─── Al-Quran (all authenticated users) ─────────────
-    Route::get('/quran', [QuranController::class, 'index'])->name('quran.index');
-    Route::get('/quran/surah/{number}', [QuranController::class, 'surah'])->name('quran.surah');
-    Route::get('/quran/tafsir/{number}', [QuranController::class, 'tafsir'])->name('quran.tafsir');
+    // Bookmark routes (authenticated users only)
     Route::post('/quran/bookmarks', [QuranController::class, 'bookmark'])->name('quran.bookmark');
     Route::delete('/quran/bookmarks/{bookmark}', [QuranController::class, 'unbookmark'])->name('quran.unbookmark');
     Route::get('/quran/bookmarks', [QuranController::class, 'bookmarks'])->name('quran.bookmarks');
 });
+
+// ─────────────────────────────────────────────────────────
+// Public Quran & Al-Ma'tsurat Routes (Accessible without login)
+// ─────────────────────────────────────────────────────────
+Route::get('/quran', [QuranController::class, 'index'])->name('quran.index');
+Route::get('/quran/surah/{number}', [QuranController::class, 'surah'])->name('quran.surah');
+Route::get('/quran/tafsir/{number}', [QuranController::class, 'tafsir'])->name('quran.tafsir');
+Route::get('/matsurat', [QuranController::class, 'matsurat'])->name('quran.matsurat');

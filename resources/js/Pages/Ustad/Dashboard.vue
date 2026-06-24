@@ -43,6 +43,11 @@ const activeGroup = computed(() => {
   return props.groups.find(g => g.id === selectedGroupId.value) || null;
 });
 
+const hasPendingGroupAttendances = computed(() => {
+  if (!activeGroup.value || !activeGroup.value.members) return false;
+  return activeGroup.value.members.some(m => m.status && !m.is_approved);
+});
+
 // Search Queries
 const searchMaterialQuery = ref('');
 const searchActivityQuery = ref('');
@@ -108,7 +113,7 @@ const selectedActivityMembers = computed(() => {
   const group = props.groups.find(g => g.id === selectedActivity.value.group_id);
   if (!group) return [];
   
-  return group.members.map(m => {
+  const list = group.members.map(m => {
     const existing = props.attendances.find(at => at.user_id === m.id && at.activity_id === selectedActivity.value.id);
     return {
       id: m.id,
@@ -117,6 +122,20 @@ const selectedActivityMembers = computed(() => {
       is_approved: existing ? (existing.approved_by !== '—' && existing.approved_by !== null) : false
     };
   });
+
+  if (group.leader) {
+    const existingLeader = props.attendances.find(at => at.user_id === group.leader.id && at.activity_id === selectedActivity.value.id);
+    if (existingLeader) {
+      list.unshift({
+        id: group.leader.id,
+        name: group.leader.name + ' (Ketua Kelompok)',
+        status: existingLeader.status,
+        is_approved: existingLeader.approved_by !== '—' && existingLeader.approved_by !== null
+      });
+    }
+  }
+
+  return list;
 });
 
 // Update group selection
@@ -140,6 +159,61 @@ const approveMember = (activity, member) => {
   if (!activity) return;
   router.post(`/activities/${activity.id}/attendances/${member.id}/approve`, {}, {
     onSuccess: () => triggerNotification(`Kehadiran ${member.name} berhasil disetujui!`)
+  });
+};
+
+const approveAllGroupAttendance = () => {
+  if (!props.activeActivity || !activeGroup.value) return;
+  
+  const payload = {
+    attendances: activeGroup.value.members
+      .filter(m => m.status)
+      .map(m => ({
+        user_id: m.id,
+        status: m.status
+      }))
+  };
+
+  if (payload.attendances.length === 0) return;
+
+  router.post(`/activities/${props.activeActivity.id}/attendances/approve`, payload, {
+    onSuccess: () => triggerNotification('Semua absensi kelompok berhasil disetujui!')
+  });
+};
+
+const approveAllSessionAttendance = (activity) => {
+  if (!activity) return;
+  
+  const group = props.groups.find(g => g.id === activity.group_id);
+  if (!group) return;
+
+  const attendancesList = group.members.map(m => {
+    const existing = props.attendances.find(at => at.user_id === m.id && at.activity_id === activity.id);
+    return {
+      user_id: m.id,
+      status: existing ? existing.status : 'present'
+    };
+  });
+
+  if (group.leader) {
+    const existingLeader = props.attendances.find(at => at.user_id === group.leader.id && at.activity_id === activity.id);
+    if (existingLeader) {
+      attendancesList.push({
+        user_id: group.leader.id,
+        status: existingLeader.status
+      });
+    }
+  }
+
+  const payload = {
+    attendances: attendancesList
+  };
+
+  router.post(`/activities/${activity.id}/attendances/approve`, payload, {
+    onSuccess: () => {
+      showAttendanceModal.value = false;
+      triggerNotification('Semua absensi sesi kajian berhasil disetujui!');
+    }
   });
 };
 
@@ -652,15 +726,28 @@ watch(activeTab, (newTab) => {
                   </div>
                 </div>
 
-                <button 
-                  @click="openDelegation" 
-                  class="px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border inline-flex items-center space-x-1.5"
-                  :class="activeGroup.is_delegated 
-                    ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100' 
-                    : 'bg-emerald-700 border-emerald-700 text-white hover:bg-emerald-800'"
-                >
-                  <span>{{ activeGroup.is_delegated ? 'Kelola Delegasi' : 'Delegasikan Akses' }}</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <button 
+                    v-if="hasPendingGroupAttendances"
+                    @click="approveAllGroupAttendance"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all border inline-flex items-center space-x-1.5 bg-emerald-700 border-emerald-750 text-white hover:bg-emerald-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Setujui Semua</span>
+                  </button>
+
+                  <button 
+                    @click="openDelegation" 
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border inline-flex items-center space-x-1.5"
+                    :class="activeGroup.is_delegated 
+                      ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100' 
+                      : 'bg-emerald-50 border-emerald-250 text-emerald-750 hover:bg-emerald-100'"
+                  >
+                    <span>{{ activeGroup.is_delegated ? 'Kelola Delegasi' : 'Delegasikan Akses' }}</span>
+                  </button>
+                </div>
               </div>
 
               <div v-if="activeGroup.is_delegated" class="bg-amber-50/60 border-b border-amber-100 px-6 py-3 text-xs text-amber-800 flex items-center space-x-2">
@@ -896,7 +983,10 @@ watch(activeTab, (newTab) => {
             <div v-for="act in filteredActivities" :key="act.id" class="p-4 rounded-xl border border-gray-150 bg-[#FAFAF9]/40 space-y-3 animate-slide-in">
               <div>
                 <div class="flex justify-between items-start gap-2">
-                  <span class="font-bold text-gray-950 text-sm block leading-snug">{{ act.topic }}</span>
+                  <span class="font-bold text-gray-950 text-sm block leading-snug">
+                    {{ act.topic }}
+                    <span v-if="act.has_pending" class="ml-1 inline-block bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-bold px-1.5 py-0.5 rounded">Pending Approval</span>
+                  </span>
                   <span class="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-100 flex-shrink-0">
                     {{ act.group_name }}
                   </span>
@@ -907,6 +997,13 @@ watch(activeTab, (newTab) => {
                 Jadwal: {{ act.date_human }}
               </div>
               <div class="pt-2 border-t border-dashed border-gray-200 flex items-center justify-end space-x-2">
+                <button 
+                  v-if="act.has_pending"
+                  @click="approveAllSessionAttendance(act)"
+                  class="text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1 px-2.5 rounded shadow-sm transition-colors"
+                >
+                  Setujui Sesi
+                </button>
                 <button @click="openAttendanceApproval(act)" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold border border-blue-200 bg-blue-50 py-1 px-2.5 rounded">Input/Edit Absen</button>
                 <button @click="openEditActivity(act)" class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold border border-emerald-200 bg-emerald-50 py-1 px-2.5 rounded">Edit</button>
                 <button @click="deleteActivity(act.id)" class="text-[10px] text-red-655 hover:text-red-900 font-bold border border-red-200 bg-red-50 py-1 px-2.5 rounded">Hapus</button>
@@ -929,10 +1026,20 @@ watch(activeTab, (newTab) => {
               <tbody class="divide-y divide-gray-100">
                 <tr v-for="act in filteredActivities" :key="act.id" class="hover:bg-gray-50/40">
                   <td class="py-3 px-6 font-bold text-gray-900">{{ act.group_name }}</td>
-                  <td class="py-3 px-6 text-emerald-800 font-semibold">{{ act.topic }}</td>
+                  <td class="py-3 px-6 text-emerald-800 font-semibold">
+                    {{ act.topic }}
+                    <span v-if="act.has_pending" class="ml-2 inline-block bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-bold px-1.5 py-0.5 rounded">Pending</span>
+                  </td>
                   <td class="py-3 px-6 text-gray-600 font-semibold">{{ act.date_human }}</td>
                   <td class="py-3 px-6 text-gray-500 max-w-xs truncate">{{ act.description || '—' }}</td>
                   <td class="py-3 px-6 text-center space-x-2">
+                    <button 
+                      v-if="act.has_pending"
+                      @click="approveAllSessionAttendance(act)"
+                      class="text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1 px-2.5 rounded shadow-sm transition-colors"
+                    >
+                      Setujui Sesi
+                    </button>
                     <button @click="openAttendanceApproval(act)" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold">Input/Edit Absen</button>
                     <button @click="openEditActivity(act)" class="text-[10px] text-emerald-700 hover:text-emerald-950 font-bold">Edit</button>
                     <button @click="deleteActivity(act.id)" class="text-[10px] text-red-655 hover:text-red-900 font-bold">Hapus</button>
@@ -1487,7 +1594,19 @@ watch(activeTab, (newTab) => {
           </button>
         </div>
         <div class="p-6 space-y-4">
-          <p class="text-xs text-gray-500 font-medium">Verifikasi presensi untuk topik: <strong class="text-emerald-950">{{ selectedActivity?.topic }}</strong></p>
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-xs text-gray-500 font-medium">Verifikasi presensi untuk topik: <strong class="text-emerald-950">{{ selectedActivity?.topic }}</strong></p>
+            <button 
+              v-if="selectedActivityMembers.some(m => m.status && !m.is_approved)"
+              @click="approveAllSessionAttendance(selectedActivity)"
+              class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[10px] py-1.5 px-3 rounded-lg shadow-sm transition-all flex items-center gap-1 flex-shrink-0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Setujui Semua</span>
+            </button>
+          </div>
           
           <div class="max-h-80 overflow-y-auto divide-y divide-gray-100">
             <div v-for="member in selectedActivityMembers" :key="member.id" class="py-3 flex items-center justify-between">

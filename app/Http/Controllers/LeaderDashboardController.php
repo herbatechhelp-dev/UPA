@@ -33,6 +33,7 @@ class LeaderDashboardController extends Controller
                 'activeActivity' => null,
                 'materials'      => [],
                 'hasCheckedIn'   => false,
+                'activities'     => [],
             ]);
         }
 
@@ -63,6 +64,48 @@ class LeaderDashboardController extends Controller
             ];
         });
 
+        // Fetch all activities for this group to show history/submission status
+        $activities = $group->activities()
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function (Activity $activity) {
+                $attendances = Attendance::where('activity_id', $activity->id)
+                    ->with('user:id,name')
+                    ->get();
+                $totalMembers = $attendances->count();
+                $presentCount = $attendances->whereIn('status', ['present', 'late'])->count();
+                $absentCount = $attendances->where('status', 'absent')->count();
+                $sickCount = $attendances->where('status', 'sick')->count();
+                $permissionCount = $attendances->where('status', 'permission')->count();
+
+                $hasPending = $attendances->whereNull('approved_by')->isNotEmpty();
+
+                $attendanceDetails = $attendances->map(fn($att) => [
+                    'id'          => $att->id,
+                    'user_id'     => $att->user_id,
+                    'user_name'   => $att->user?->name ?? '—',
+                    'status'      => $att->status,
+                    'is_approved' => $att->approved_by !== null,
+                ])->toArray();
+
+                return [
+                    'id'          => $activity->id,
+                    'topic'       => $activity->topic,
+                    'date'        => $activity->date->toISOString(),
+                    'date_human'  => $activity->date->format('d M Y H:i'),
+                    'description' => $activity->description,
+                    'stats'       => [
+                        'total'      => $totalMembers,
+                        'present'    => $presentCount,
+                        'absent'     => $absentCount,
+                        'sick'       => $sickCount,
+                        'permission' => $permissionCount,
+                    ],
+                    'status'      => $hasPending ? 'Pending' : 'Approved',
+                    'details'     => $attendanceDetails,
+                ];
+            });
+
         // Fetch published materials (from any Ustad who manages groups)
         $materials = Material::published()
             ->latest('published_at')
@@ -92,6 +135,7 @@ class LeaderDashboardController extends Controller
             ] : null,
             'materials'    => $materials,
             'hasCheckedIn' => $hasCheckedIn,
+            'activities'   => $activities,
         ]);
     }
 }

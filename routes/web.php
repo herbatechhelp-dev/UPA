@@ -148,8 +148,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('grades.destroy');
 
         // Activities / Kajian Sessions Management (Ustad only)
-        Route::post('/activities', [ActivityController::class, 'store'])
-            ->name('activities.store');
         Route::put('/activities/{activity}', [ActivityController::class, 'update'])
             ->name('activities.update');
         Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])
@@ -176,6 +174,10 @@ Route::middleware(['auth'])->group(function () {
     // Shared Routes (accessible by multiple roles)
     // Authorization is handled inside each controller method
     // ─────────────────────────────────────────────────────
+
+    // Create activity session — Ustad, Superadmin, or Leader (controller checks authorization)
+    Route::post('/activities', [ActivityController::class, 'store'])
+        ->name('activities.store');
 
     // Self check-in — Leader OR Member (controller validates group membership)
     Route::post('/attendances/check-in', [AttendanceCheckInController::class, 'checkIn'])

@@ -63,9 +63,21 @@ class AttendanceApprovalController extends Controller
             'attendances.*.status' => ['required', 'in:present,late,absent,sick,permission'],
         ]);
 
+        // Check if delegation is currently active for this leader (if leader is performing the action)
+        $isDelegated = false;
+        if ($currentUser->isLeader()) {
+            $group = $activity->group;
+            if ($group->is_delegated && ($group->delegated_until === null || Carbon::parse($group->delegated_until)->isFuture())) {
+                $isDelegated = true;
+            }
+        }
+
         // 3. Process each attendance update
         foreach ($validated['attendances'] as $attendanceData) {
-            // Find or create attendance record for this user and activity
+            // If the current user is Ustad or Superadmin, or if they are a delegated Leader, auto-approve.
+            // If they are a non-delegated Leader, save as pending (approved_by = null).
+            $shouldApprove = $currentUser->isSuperadmin() || $currentUser->isUstad() || $isDelegated;
+
             Attendance::updateOrCreate(
                 [
                     'activity_id' => $activity->id,
@@ -73,13 +85,17 @@ class AttendanceApprovalController extends Controller
                 ],
                 [
                     'status' => $attendanceData['status'],
-                    'approved_by' => $currentUser->id,
-                    'approved_at' => Carbon::now(),
+                    'approved_by' => $shouldApprove ? $currentUser->id : null,
+                    'approved_at' => $shouldApprove ? Carbon::now() : null,
                 ]
             );
         }
 
-        return redirect()->back()->with('success', 'Absensi berhasil diverifikasi dan disimpan.');
+        $message = ($currentUser->isLeader() && !$isDelegated)
+            ? 'Draf absensi kelompok berhasil diajukan untuk approval.'
+            : 'Absensi berhasil diverifikasi dan disimpan.';
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
@@ -89,6 +105,15 @@ class AttendanceApprovalController extends Controller
     {
         $this->checkAuthorization($activity);
         $currentUser = Auth::user();
+
+        // Enforce delegation check for leaders
+        if ($currentUser->isLeader()) {
+            $group = $activity->group;
+            $isDelegated = $group->is_delegated && ($group->delegated_until === null || Carbon::parse($group->delegated_until)->isFuture());
+            if (!$isDelegated) {
+                abort(403, 'Anda tidak memiliki hak akses untuk menyetujui absensi tanpa delegasi.');
+            }
+        }
 
         $attendance = Attendance::where('activity_id', $activity->id)
             ->where('user_id', $user->id)
@@ -117,6 +142,16 @@ class AttendanceApprovalController extends Controller
     public function rejectSingle(Request $request, Activity $activity, \App\Models\User $user): RedirectResponse
     {
         $this->checkAuthorization($activity);
+        $currentUser = Auth::user();
+
+        // Enforce delegation check for leaders
+        if ($currentUser->isLeader()) {
+            $group = $activity->group;
+            $isDelegated = $group->is_delegated && ($group->delegated_until === null || Carbon::parse($group->delegated_until)->isFuture());
+            if (!$isDelegated) {
+                abort(403, 'Anda tidak memiliki hak akses untuk menolak absensi tanpa delegasi.');
+            }
+        }
 
         $attendance = Attendance::where('activity_id', $activity->id)
             ->where('user_id', $user->id)

@@ -551,11 +551,13 @@ class AdminGroupController extends Controller
 
             $formattedActivities = [];
             foreach ($activities as $idx => $act) {
+                $hasPending = Attendance::where('activity_id', $act->id)->whereNull('approved_by')->exists();
                 $formattedActivities[] = [
                     'id' => $act->id,
                     'label' => 'P' . ($idx + 1),
                     'date' => $act->date->format('d/m/Y'),
-                    'topic' => $act->topic
+                    'topic' => $act->topic,
+                    'is_pending' => $hasPending
                 ];
             }
 

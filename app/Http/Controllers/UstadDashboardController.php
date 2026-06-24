@@ -58,8 +58,28 @@ class UstadDashboardController extends Controller
                         'status'        => $attendance?->status, // null means not checked in yet
                         'attendance_id' => $attendance?->id,
                         'is_approved'   => $attendance ? ($attendance->approved_by !== null) : false,
+                        'is_leader'     => false,
                     ];
                 });
+
+                if ($group->leader) {
+                    $leaderAttendance = $latestActivity
+                        ? Attendance::where('activity_id', $latestActivity->id)
+                            ->where('user_id', $group->leader->id)
+                            ->first()
+                        : null;
+
+                    if ($leaderAttendance) {
+                        $membersWithStatus->prepend([
+                            'id'            => $group->leader->id,
+                            'name'          => $group->leader->name . ' (Ketua Kelompok)',
+                            'status'        => $leaderAttendance->status,
+                            'attendance_id' => $leaderAttendance->id,
+                            'is_approved'   => $leaderAttendance->approved_by !== null,
+                            'is_leader'     => true,
+                        ]);
+                    }
+                }
 
                 return [
                     'id'              => $group->id,
@@ -107,6 +127,7 @@ class UstadDashboardController extends Controller
                 'date'        => $a->date ? $a->date->format('Y-m-d H:i') : '',
                 'date_human'  => $a->date ? $a->date->format('d M Y H:i') : '—',
                 'description' => $a->description,
+                'has_pending' => Attendance::where('activity_id', $a->id)->whereNull('approved_by')->exists(),
             ]);
 
         // 3. Fetch all grades given by this Ustad or for members in their groups
